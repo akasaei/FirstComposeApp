@@ -17,15 +17,14 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -49,14 +48,20 @@ fun OrderSummaryScreen(
     OrderSummaryContent(
         uiState = viewModel.uiState,
         modifier = modifier,
-        onRetry = { viewModel.fetchOrders() }
+        simulateFailure = viewModel.simulateError,
+        onCheckedChanged = {
+            viewModel.setSimulation(it)
+        },
+        refresh = { viewModel.fetchOrders() }
     )
 }
 
 @Composable
 fun OrderSummaryContent(
     uiState: OrderUiState,
-    onRetry: () -> Unit,
+    simulateFailure: Boolean,
+    onCheckedChanged: (Boolean) -> Unit,
+    refresh: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Scaffold(
@@ -73,6 +78,17 @@ fun OrderSummaryContent(
                         .padding(20.dp),
                     textAlign = TextAlign.Center
                 )
+                Spacer(modifier = Modifier.height(48.dp))
+                Row {
+                    Checkbox(checked = simulateFailure, onCheckedChange = onCheckedChanged)
+                    Text(text = "Enable failure", modifier = Modifier.padding(top = 10.dp))
+                    Button(
+                        onClick = refresh, modifier = Modifier
+                            .padding(start = 40.dp)
+                    ) {
+                        Text(text = "Refresh")
+                    }
+                }
             }
         }
     ) { paddingValues ->
@@ -84,9 +100,9 @@ fun OrderSummaryContent(
             when {
                 uiState.isLoading -> LoadingScreen()
                 uiState.error != null -> ErrorScreen(
-                    errorMessage = uiState.error,
-                    onRetry = onRetry
+                    errorMessage = uiState.error
                 )
+
                 else -> OrderList(uiState.orders)
             }
         }
@@ -114,8 +130,7 @@ fun LoadingScreen() {
 
 @Composable
 fun ErrorScreen(
-    errorMessage: String,
-    onRetry: () -> Unit
+    errorMessage: String
 ) {
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -139,10 +154,6 @@ fun ErrorScreen(
             color = MaterialTheme.colorScheme.error,
             style = MaterialTheme.typography.bodySmall
         )
-        Spacer(modifier = Modifier.height(16.dp))
-        androidx.compose.material3.Button(onClick = onRetry) {
-            Text(text = "Retry")
-        }
     }
 }
 
@@ -152,9 +163,7 @@ fun OrderList(orders: List<Order>) {
     val columnWeight3 = .3f
     val columnWeight7 = .7f
 
-    val totalValue by remember(orders) {
-        derivedStateOf { orders.sumOf { it.totalValue } }
-    }
+    val totalValue = orders.sumOf { it.totalValue }
 
     LazyColumn(
         contentPadding = PaddingValues(16.dp),
@@ -222,7 +231,9 @@ fun OrderSummaryPreview() {
                 isLoading = false,
                 error = null
             ),
-            onRetry = {}
+            simulateFailure = false,
+            onCheckedChanged = {},
+            refresh = {}
         )
     }
 }

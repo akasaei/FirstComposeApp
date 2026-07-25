@@ -12,6 +12,12 @@ import kotlinx.coroutines.launch
 class OrderViewModel : ViewModel() {
     private val repository = OrderRepository()
 
+    var simulateError by mutableStateOf(true)
+        private set
+
+    fun setSimulation(enabled: Boolean) {
+        simulateError = enabled
+    }
     var uiState by mutableStateOf(OrderUiState())
         private set
 
@@ -23,18 +29,16 @@ class OrderViewModel : ViewModel() {
         viewModelScope.launch {
             uiState = uiState.copy(isLoading = true, error = null)
             try {
-                val orders = repository.fetchOrders(uiState.simulatorError)
+                val orders = repository.fetchOrders(simulateError)
                 uiState = uiState.copy(
                     isLoading = false,
-                    orders = orders,
-                    simulatorError = true
+                    orders = orders
                 )
 
             } catch (e: Exception) {
                 uiState = uiState.copy(
                     isLoading = false,
-                    error = e.message ?: "Unknown error",
-                    simulatorError = false
+                    error = e.message ?: "Unknown error"
                 )
             }
         }
