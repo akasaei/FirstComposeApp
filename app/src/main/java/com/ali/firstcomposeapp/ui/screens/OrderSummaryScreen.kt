@@ -1,4 +1,4 @@
-package com.ali.firstcomposeapp.ui.screen
+package com.ali.firstcomposeapp.ui.screens
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
