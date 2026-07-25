@@ -2,9 +2,7 @@ package com.ali.firstcomposeapp.repository
 
 import com.ali.firstcomposeapp.model.Order
 import com.ali.firstcomposeapp.model.OrderStatus
-import com.ali.firstcomposeapp.service.totalRevenue
 import kotlinx.coroutines.delay
-import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 
@@ -19,8 +17,17 @@ private val orders = listOf(
 
 class OrderRepository {
 
-    suspend fun fetchOrders(): List<Order> {
-        delay(1.seconds)
-        return orders
+    suspend fun fetchOrders(
+        simulateError: Boolean = false
+    ): List<Order> {
+        delay(2.seconds)
+        if (simulateError) {
+            throw Exception("Network unavailable")
+        } else {
+            return orders
+        }
+
     }
+
+
 }

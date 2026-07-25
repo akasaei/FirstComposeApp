@@ -1,22 +1,19 @@
 package com.ali.firstcomposeapp.viewmodel
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ali.firstcomposeapp.model.Order
+import com.ali.firstcomposeapp.model.OrderUiState
 import com.ali.firstcomposeapp.repository.OrderRepository
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class OrderViewModel : ViewModel() {
     private val repository = OrderRepository()
 
-    private val _orders = MutableStateFlow<List<Order>>(emptyList())
-    val orders: StateFlow<List<Order>> = _orders.asStateFlow()
-
-    private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+    var uiState by mutableStateOf(OrderUiState())
+        private set
 
     init {
         fetchOrders()
@@ -24,11 +21,21 @@ class OrderViewModel : ViewModel() {
 
     fun fetchOrders() {
         viewModelScope.launch {
-            _isLoading.value = true
+            uiState = uiState.copy(isLoading = true, error = null)
             try {
-                _orders.value = repository.fetchOrders()
-            } finally {
-                _isLoading.value = false
+                val orders = repository.fetchOrders(uiState.simulatorError)
+                uiState = uiState.copy(
+                    isLoading = false,
+                    orders = orders,
+                    simulatorError = true
+                )
+
+            } catch (e: Exception) {
+                uiState = uiState.copy(
+                    isLoading = false,
+                    error = e.message ?: "Unknown error",
+                    simulatorError = false
+                )
             }
         }
     }
