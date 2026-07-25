@@ -1,0 +1,4 @@
+- [x] Create `OrderViewModel` to handle data fetching
+- [x] Update `MainActivity.kt` to use `OrderViewModel` in `OrderSummaryScreen`
+- [x] Add loading state to `OrderSummaryScreen`
+- [x] Verify build and functionality

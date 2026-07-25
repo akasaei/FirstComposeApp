@@ -1,0 +1,7 @@
+- [x] Implement state-based navigation in `MainActivity`
+- [x] Refactor `GreetingScreen` to use a navigation callback
+- [x] Refactor `CounterScreen` to be stateless (`CounterContent`)
+- [x] Add "Decrease" functionality to `CounterScreen`
+- [x] Improve UI styling with Material 3 components
+- [x] Add `@Preview` for all screens
+- [x] Verify build and functionality
