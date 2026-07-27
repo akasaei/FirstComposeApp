@@ -1,0 +1,4 @@
+- [x] Update `OrderUiState` default values
+- [x] Refactor `OrderViewModel` logic
+- [x] Update `OrderSummaryScreen` to use unified state
+- [x] Verify fix with deployment and testing

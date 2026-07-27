@@ -1,45 +1,62 @@
 package com.ali.firstcomposeapp.viewmodel
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ali.firstcomposeapp.model.OrderUiState
 import com.ali.firstcomposeapp.repository.OrderRepository
+import com.ali.firstcomposeapp.viewmodel.event.OrderEvent
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class OrderViewModel : ViewModel() {
     private val repository = OrderRepository()
+    private val _uiState =
+        MutableStateFlow(OrderUiState())
+    val uiState: StateFlow<OrderUiState> =
+        _uiState.asStateFlow()
 
-    var simulateError by mutableStateOf(true)
-        private set
+    fun onEvent(event: OrderEvent) {
+        when (event) {
+            is OrderEvent.SetSimulation -> {
+                _uiState.update { it.copy(simulateFailure = event.enabled) }
+            }
 
-    fun setSimulation(enabled: Boolean) {
-        simulateError = enabled
+            is OrderEvent.Refresh ->
+                fetchOrders()
+        }
     }
-    var uiState by mutableStateOf(OrderUiState())
-        private set
 
     init {
         fetchOrders()
     }
 
-    fun fetchOrders() {
+    private fun fetchOrders() {
         viewModelScope.launch {
-            uiState = uiState.copy(isLoading = true, error = null)
-            try {
-                val orders = repository.fetchOrders(simulateError)
-                uiState = uiState.copy(
-                    isLoading = false,
-                    orders = orders
+            _uiState.update {
+                it.copy(
+                    isLoading = true,
+                    error = null
                 )
+            }
+            try {
+                val orders = repository.fetchOrders(_uiState.value.simulateFailure)
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        orders = orders
+                    )
+                }
 
             } catch (e: Exception) {
-                uiState = uiState.copy(
-                    isLoading = false,
-                    error = e.message ?: "Unknown error"
-                )
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        error = e.message ?: "Unknown error"
+                    )
+                }
             }
         }
     }

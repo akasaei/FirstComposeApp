@@ -26,6 +26,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -39,21 +41,28 @@ import com.ali.firstcomposeapp.ui.components.TableCell
 import com.ali.firstcomposeapp.ui.components.TableHeaderCell
 import com.ali.firstcomposeapp.ui.theme.FirstComposeAppTheme
 import com.ali.firstcomposeapp.viewmodel.OrderViewModel
+import com.ali.firstcomposeapp.viewmodel.event.OrderEvent
 
 @Composable
 fun OrderSummaryScreen(
     modifier: Modifier = Modifier,
     viewModel: OrderViewModel = viewModel()
 ) {
+    val uiState by
+    viewModel.uiState.collectAsState()
 
     OrderSummaryContent(
-        uiState = viewModel.uiState,
+        uiState = uiState,
         modifier = modifier,
-        simulateFailure = viewModel.simulateError,
+        simulateFailure = uiState.simulateFailure,
         onCheckedChanged = {
-            viewModel.setSimulation(it)
+            viewModel.onEvent(
+                OrderEvent.SetSimulation(it)
+            )
         },
-        refresh = { viewModel.fetchOrders() }
+        refresh = {
+            viewModel.onEvent(OrderEvent.Refresh)
+        }
     )
 }
 
@@ -85,14 +94,14 @@ fun OrderSummaryContent(
                     Text(text = "Enable failure", modifier = Modifier.padding(top = 10.dp))
                     TextButton(
                         onClick = refresh, modifier = Modifier
-                            .padding(start = 20.dp)
+                            .padding(start = 10.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Refresh ,
                             contentDescription = "Order Summary",
                             tint = MaterialTheme.colorScheme.inverseSurface,
                             modifier = Modifier
-                                .size(32.dp)
+                                .size(28.dp)
                                 .padding(0.dp)
                         )
                     }
