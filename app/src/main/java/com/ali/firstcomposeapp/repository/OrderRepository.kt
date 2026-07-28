@@ -28,6 +28,17 @@ class OrderRepository {
         }
 
     }
+    suspend fun fetchOrderDetail(
+        orderId: String?
+    ): Order? {
+        delay(2.seconds)
+        if (orderId != null) {
+            return orders.find { it.id == orderId }
+        } else {
+            throw Exception("Order not found")
+        }
+
+    }
 
 
 }

@@ -59,7 +59,7 @@ fun GreetingScreen(
 }
 
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, apiLevel = 36)
 @Composable
 fun GreetingPreview() {
     FirstComposeAppTheme {

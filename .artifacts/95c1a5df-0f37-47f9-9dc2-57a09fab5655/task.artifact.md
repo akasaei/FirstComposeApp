@@ -1,0 +1,4 @@
+- [x] Update `OrderSummaryScreen.kt` to accept `onOrderClick` callback
+- [x] Update `AppNavigation.kt` to pass `onOrderClick` to `OrderSummaryScreen`
+- [x] Update `App.kt` to pass `onOrderClick` to `OrderSummaryScreen`
+- [x] Verify fix by running the app and clicking an order

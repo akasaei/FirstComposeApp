@@ -15,13 +15,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.ali.firstcomposeapp.model.Screen
 import com.ali.firstcomposeapp.ui.theme.FirstComposeAppTheme
 
 
 @Composable
 fun HorizontalFloatingToolbar(
-    currentScreen: Screen,
     onHomeClick: () -> Unit,
     onOrderSummaryClick: () -> Unit,
     onCounterClick: () -> Unit
@@ -29,8 +27,7 @@ fun HorizontalFloatingToolbar(
     BottomAppBar {
         Row {
             TextButton(
-                onClick = onHomeClick,
-                enabled = (currentScreen != Screen.Greeting)
+                onClick = onHomeClick
             ) {
                 Icon(
                     imageVector = Icons.Default.Home,
@@ -43,8 +40,7 @@ fun HorizontalFloatingToolbar(
             }
 
             TextButton(
-                onClick = onCounterClick,
-                enabled = (currentScreen != Screen.Counter)
+                onClick = onCounterClick
             ) {
                 Icon(
                     imageVector = Icons.Default.AddCircle,
@@ -56,8 +52,7 @@ fun HorizontalFloatingToolbar(
                 )
             }
             TextButton(
-                onClick = onOrderSummaryClick,
-                enabled = (currentScreen != Screen.OrderSummary)
+                onClick = onOrderSummaryClick
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.List,
@@ -73,12 +68,11 @@ fun HorizontalFloatingToolbar(
 
 }
 
-@Preview
+@Preview(apiLevel = 36)
 @Composable
 fun HorizontalFloatingToolbarPreview() {
     FirstComposeAppTheme {
         HorizontalFloatingToolbar(
-            currentScreen = Screen.Greeting,
             onHomeClick = {},
             onOrderSummaryClick = {},
             onCounterClick = {}

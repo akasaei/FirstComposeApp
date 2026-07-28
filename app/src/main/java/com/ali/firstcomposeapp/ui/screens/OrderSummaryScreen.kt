@@ -1,6 +1,7 @@
 package com.ali.firstcomposeapp.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -46,7 +47,8 @@ import com.ali.firstcomposeapp.viewmodel.event.OrderEvent
 @Composable
 fun OrderSummaryScreen(
     modifier: Modifier = Modifier,
-    viewModel: OrderViewModel = viewModel()
+    viewModel: OrderViewModel = viewModel(),
+    onOrderDetailClick : (String) -> Unit
 ) {
     val uiState by
     viewModel.uiState.collectAsState()
@@ -62,7 +64,8 @@ fun OrderSummaryScreen(
         },
         refresh = {
             viewModel.onEvent(OrderEvent.Refresh)
-        }
+        },
+        onOrderDetailClick  = onOrderDetailClick
     )
 }
 
@@ -72,7 +75,8 @@ fun OrderSummaryContent(
     simulateFailure: Boolean,
     onCheckedChanged: (Boolean) -> Unit,
     refresh: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onOrderDetailClick : (String) -> Unit
 ) {
     Scaffold(
         modifier = modifier.fillMaxWidth(),
@@ -120,7 +124,7 @@ fun OrderSummaryContent(
                     errorMessage = uiState.error
                 )
 
-                else -> OrderList(uiState.orders)
+                else -> OrderList(uiState.orders, onOrderDetailClick  = onOrderDetailClick)
             }
         }
     }
@@ -162,7 +166,7 @@ fun ErrorScreen(
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = "Failed to load orders",
+            text = "Something went wrong!",
             color = MaterialTheme.colorScheme.error,
             style = MaterialTheme.typography.bodyLarge
         )
@@ -175,7 +179,10 @@ fun ErrorScreen(
 }
 
 @Composable
-fun OrderList(orders: List<Order>) {
+fun OrderList(
+    orders: List<Order>,
+    onOrderDetailClick : (String) -> Unit
+) {
     val columnWeight4 = .4f
     val columnWeight3 = .3f
     val columnWeight7 = .7f
@@ -211,7 +218,9 @@ fun OrderList(orders: List<Order>) {
             }
         }
         items(items = orders, key = { it.id }) { currentOrder ->
-            Row(Modifier.fillMaxWidth()) {
+            Row(Modifier
+                .fillMaxWidth()
+                .clickable(onClick = { onOrderDetailClick(currentOrder.id) })) {
                 TableCell(text = currentOrder.id, weight = columnWeight4)
                 TableCell(text = currentOrder.customer, weight = columnWeight3)
                 TableCell(text = currentOrder.totalValue.toString(), weight = columnWeight3)
@@ -234,7 +243,7 @@ fun OrderList(orders: List<Order>) {
 }
 
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, apiLevel = 36)
 @Composable
 fun OrderSummaryPreview() {
     FirstComposeAppTheme {
@@ -250,7 +259,8 @@ fun OrderSummaryPreview() {
             ),
             simulateFailure = false,
             onCheckedChanged = {},
-            refresh = {}
+            refresh = {},
+            onOrderDetailClick = {}
         )
     }
 }
