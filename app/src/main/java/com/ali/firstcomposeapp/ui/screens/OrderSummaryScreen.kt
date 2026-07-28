@@ -19,7 +19,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -56,12 +55,6 @@ fun OrderSummaryScreen(
     OrderSummaryContent(
         uiState = uiState,
         modifier = modifier,
-        simulateFailure = uiState.simulateFailure,
-        onCheckedChanged = {
-            viewModel.onEvent(
-                OrderEvent.SetSimulation(it)
-            )
-        },
         refresh = {
             viewModel.onEvent(OrderEvent.Refresh)
         },
@@ -72,8 +65,6 @@ fun OrderSummaryScreen(
 @Composable
 fun OrderSummaryContent(
     uiState: OrderUiState,
-    simulateFailure: Boolean,
-    onCheckedChanged: (Boolean) -> Unit,
     refresh: () -> Unit,
     modifier: Modifier = Modifier,
     onOrderDetailClick : (String) -> Unit
@@ -94,8 +85,6 @@ fun OrderSummaryContent(
                 )
                 Spacer(modifier = Modifier.height(48.dp))
                 Row {
-                    Checkbox(checked = simulateFailure, onCheckedChange = onCheckedChanged)
-                    Text(text = "Enable failure", modifier = Modifier.padding(top = 10.dp))
                     TextButton(
                         onClick = refresh, modifier = Modifier
                             .padding(start = 10.dp)
@@ -257,8 +246,6 @@ fun OrderSummaryPreview() {
                 isLoading = false,
                 error = null
             ),
-            simulateFailure = false,
-            onCheckedChanged = {},
             refresh = {},
             onOrderDetailClick = {}
         )

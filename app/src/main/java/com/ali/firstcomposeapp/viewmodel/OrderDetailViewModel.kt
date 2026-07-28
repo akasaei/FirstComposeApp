@@ -1,17 +1,25 @@
 package com.ali.firstcomposeapp.viewmodel
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.ali.firstcomposeapp.data.local.DatabaseProvider
 import com.ali.firstcomposeapp.model.OrderDetailUiState
-import com.ali.firstcomposeapp.repository.OrderRepository
+import com.ali.firstcomposeapp.data.repository.OrderRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class OrderDetailViewModel : ViewModel() {
-    private val repository = OrderRepository()
+class OrderDetailViewModel(
+    application: Application
+) : AndroidViewModel(application) {
+    val database = DatabaseProvider.getDatabase(application)
+
+    val repository = OrderRepository(
+        database.orderDao()
+    )
 
     private val _uiState =
         MutableStateFlow(OrderDetailUiState())
@@ -28,7 +36,7 @@ class OrderDetailViewModel : ViewModel() {
                 )
             }
             try {
-                val order = repository.fetchOrderDetail(orderId)
+                val order = repository.getOrder(orderId)
                 _uiState.update {
                     it.copy(
                         isLoading = false,

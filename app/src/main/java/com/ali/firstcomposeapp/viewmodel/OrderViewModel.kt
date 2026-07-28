@@ -1,9 +1,11 @@
 package com.ali.firstcomposeapp.viewmodel
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.ali.firstcomposeapp.data.local.DatabaseProvider
+import com.ali.firstcomposeapp.data.repository.OrderRepository
 import com.ali.firstcomposeapp.model.OrderUiState
-import com.ali.firstcomposeapp.repository.OrderRepository
 import com.ali.firstcomposeapp.viewmodel.event.OrderEvent
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -11,8 +13,14 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class OrderViewModel : ViewModel() {
-    private val repository = OrderRepository()
+class OrderViewModel(
+    application: Application
+) : AndroidViewModel(application) {
+    val database = DatabaseProvider.getDatabase(application)
+
+    val repository = OrderRepository(
+        database.orderDao()
+    )
     private val _uiState =
         MutableStateFlow(OrderUiState())
     val uiState: StateFlow<OrderUiState> =
@@ -21,7 +29,7 @@ class OrderViewModel : ViewModel() {
     fun onEvent(event: OrderEvent) {
         when (event) {
             is OrderEvent.SetSimulation -> {
-                _uiState.update { it.copy(simulateFailure = event.enabled) }
+
             }
 
             is OrderEvent.Refresh ->
@@ -42,7 +50,7 @@ class OrderViewModel : ViewModel() {
                 )
             }
             try {
-                val orders = repository.fetchOrders(_uiState.value.simulateFailure)
+                val orders = repository.getOrders()
                 _uiState.update {
                     it.copy(
                         isLoading = false,
