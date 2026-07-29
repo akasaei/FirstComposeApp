@@ -44,9 +44,9 @@ fun AppNavigation(
             route = AppDestination.OrderDetails.route
         ) { backStackEntry ->
 
-            val orderId =
+            val orderId: String =
                 backStackEntry.arguments
-                    ?.getString("orderId")
+                    ?.getString("orderId")!!
             OrderDetailScreen(
                 orderId = orderId
             ) { navController.popBackStack() }

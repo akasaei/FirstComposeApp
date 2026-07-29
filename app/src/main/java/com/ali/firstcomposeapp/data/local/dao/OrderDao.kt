@@ -9,18 +9,21 @@ import com.ali.firstcomposeapp.data.local.OrderEntity
 @Dao
 interface OrderDao {
 
-    @Query("SELECT * FROM orders LIMIT :offset, :limit")
+    @Query("SELECT * FROM orders LIMIT :limit OFFSET :offset")
     suspend fun getAll(limit: Int = 10, offset: Int = 0): List<OrderEntity>
 
     @Query("SELECT * FROM orders WHERE id = :id")
-    suspend fun getById(id: String?): OrderEntity?
+    suspend fun getById(id: String): OrderEntity?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(orders: List<OrderEntity>)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insert(orders: OrderEntity)
 
     @Query("DELETE FROM orders")
     suspend fun deleteAll()
 
     @Query("DELETE FROM orders WHERE id = :id")
-    suspend fun deleteById(id: String?)
+    suspend fun deleteById(id: String)
 }

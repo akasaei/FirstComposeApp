@@ -38,7 +38,7 @@ import com.ali.firstcomposeapp.viewmodel.OrderDetailViewModel
 fun OrderDetailScreen(
     modifier: Modifier = Modifier,
     viewModel: OrderDetailViewModel = viewModel(),
-    orderId: String?,
+    orderId: String,
     onOrderSummary: () -> Unit
 ) {
     LaunchedEffect(orderId) {

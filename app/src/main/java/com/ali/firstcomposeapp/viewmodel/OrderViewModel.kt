@@ -16,9 +16,9 @@ import kotlinx.coroutines.launch
 class OrderViewModel(
     application: Application
 ) : AndroidViewModel(application) {
-    val database = DatabaseProvider.getDatabase(application)
+    private val database = DatabaseProvider.getDatabase(application)
 
-    val repository = OrderRepository(
+    private val repository = OrderRepository(
         database.orderDao()
     )
     private val _uiState =
@@ -28,9 +28,6 @@ class OrderViewModel(
 
     fun onEvent(event: OrderEvent) {
         when (event) {
-            is OrderEvent.SetSimulation -> {
-
-            }
 
             is OrderEvent.Refresh ->
                 fetchOrders()

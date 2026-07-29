@@ -15,9 +15,9 @@ import kotlinx.coroutines.launch
 class OrderDetailViewModel(
     application: Application
 ) : AndroidViewModel(application) {
-    val database = DatabaseProvider.getDatabase(application)
+    private val database = DatabaseProvider.getDatabase(application)
 
-    val repository = OrderRepository(
+    private val repository = OrderRepository(
         database.orderDao()
     )
 
@@ -27,7 +27,7 @@ class OrderDetailViewModel(
     val uiState: StateFlow<OrderDetailUiState> =
         _uiState.asStateFlow()
 
-    fun fetchOrderDetail(orderId: String?) {
+    fun fetchOrderDetail(orderId: String) {
         viewModelScope.launch {
             _uiState.update {
                 it.copy(
