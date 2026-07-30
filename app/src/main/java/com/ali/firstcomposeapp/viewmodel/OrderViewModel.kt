@@ -19,7 +19,8 @@ class OrderViewModel(
     private val database = DatabaseProvider.getDatabase(application)
 
     private val repository = OrderRepository(
-        database.orderDao()
+        database.orderDao(),
+        orderItemDao = database.orderItemDao()
     )
     private val _uiState =
         MutableStateFlow(OrderUiState())

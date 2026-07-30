@@ -18,7 +18,8 @@ class OrderDetailViewModel(
     private val database = DatabaseProvider.getDatabase(application)
 
     private val repository = OrderRepository(
-        database.orderDao()
+        database.orderDao(),
+        orderItemDao = database.orderItemDao()
     )
 
     private val _uiState =
@@ -36,12 +37,21 @@ class OrderDetailViewModel(
                 )
             }
             try {
-                val order = repository.getOrder(orderId)
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        order = order
-                    )
+                val orderWithItem = repository.getOrderDetail(orderId)
+                if(orderWithItem?.order != null) {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            selectedOrder = orderWithItem
+                        )
+                    }
+                }else{
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            error = "Order Not Found"
+                        )
+                    }
                 }
 
             } catch (e: Exception) {
