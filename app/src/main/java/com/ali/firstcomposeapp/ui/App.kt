@@ -8,7 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
 import com.ali.firstcomposeapp.navigation.AppDestination
 import com.ali.firstcomposeapp.navigation.AppNavigation
-import com.ali.firstcomposeapp.ui.components.HorizontalFloatingToolbar
+import com.ali.firstcomposeapp.ui.components.BottomNavigationBar
 
 @Composable
 fun App() {
@@ -17,7 +17,7 @@ fun App() {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         bottomBar = {
-            HorizontalFloatingToolbar(
+            BottomNavigationBar(
                 onHomeClick = {
                     navController.navigate(
                         AppDestination.Home.route

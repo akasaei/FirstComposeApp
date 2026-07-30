@@ -43,6 +43,7 @@ import com.ali.firstcomposeapp.ui.components.TableCell
 import com.ali.firstcomposeapp.ui.components.TableHeaderCell
 import com.ali.firstcomposeapp.ui.theme.Blue80
 import com.ali.firstcomposeapp.ui.theme.FirstComposeAppTheme
+import com.ali.firstcomposeapp.util.asCurrency
 import com.ali.firstcomposeapp.viewmodel.OrderViewModel
 import com.ali.firstcomposeapp.viewmodel.event.OrderEvent
 
@@ -225,7 +226,7 @@ fun OrderList(
 
                 TableCell(text = currentOrder.id, weight = columnWeight3, modifier = Modifier.clickable(onClick = { onOrderDetailClick(currentOrder.id) }))
                 TableCell(text = currentOrder.customer, weight = columnWeight3)
-                TableCell(text = currentOrder.totalValue.toString(), weight = columnWeight3)
+                TableCell(text = currentOrder.totalValue.asCurrency(), weight = columnWeight3)
                 DeleteRow( weight = columnWeight1, modifier = Modifier.clickable(onClick = {onDeleteOrderClick(currentOrder.id)}))
             }
         }
@@ -239,7 +240,7 @@ fun OrderList(
                     )
             ) {
                 TableCell(text = "Total", weight = columnWeight7)
-                TableCell(text = totalValue.toString(), weight = columnWeight3)
+                TableCell(text = totalValue.asCurrency(), weight = columnWeight3)
             }
         }
     }

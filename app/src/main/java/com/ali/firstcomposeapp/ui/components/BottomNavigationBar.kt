@@ -19,7 +19,7 @@ import com.ali.firstcomposeapp.ui.theme.FirstComposeAppTheme
 
 
 @Composable
-fun HorizontalFloatingToolbar(
+fun BottomNavigationBar(
     onHomeClick: () -> Unit,
     onOrderSummaryClick: () -> Unit,
     onCounterClick: () -> Unit
@@ -72,7 +72,7 @@ fun HorizontalFloatingToolbar(
 @Composable
 fun HorizontalFloatingToolbarPreview() {
     FirstComposeAppTheme {
-        HorizontalFloatingToolbar(
+        BottomNavigationBar(
             onHomeClick = {},
             onOrderSummaryClick = {},
             onCounterClick = {}
