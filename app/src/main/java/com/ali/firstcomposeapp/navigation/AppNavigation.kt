@@ -9,6 +9,8 @@ import com.ali.firstcomposeapp.ui.screens.CounterScreen
 import com.ali.firstcomposeapp.ui.screens.GreetingScreen
 import com.ali.firstcomposeapp.ui.screens.OrderDetailScreen
 import com.ali.firstcomposeapp.ui.screens.OrderSummaryScreen
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import com.ali.firstcomposeapp.viewmodel.OrderViewModel
 
 @Composable
 fun AppNavigation(
@@ -31,7 +33,10 @@ fun AppNavigation(
         }
 
         composable(AppDestination.Orders.route) {
+            val viewModel =
+                hiltViewModel<OrderViewModel>()
             OrderSummaryScreen(
+                viewModel = viewModel,
                 onOrderDetailClick = { orderId ->
                     navController.navigate(
                         AppDestination.OrderDetails.createRoute(orderId)

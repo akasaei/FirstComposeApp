@@ -4,17 +4,21 @@ package com.ali.firstcomposeapp.data.repository
 
 import com.ali.firstcomposeapp.data.local.OrderEntity
 import com.ali.firstcomposeapp.data.local.OrderItemEntity
-import com.ali.firstcomposeapp.data.local.dao.OrderDao
-import com.ali.firstcomposeapp.data.local.dao.OrderItemDao
 import com.ali.firstcomposeapp.data.mapper.toEntity
 import com.ali.firstcomposeapp.data.mapper.toOrder
 import com.ali.firstcomposeapp.data.mapper.toOrderDetail
 import com.ali.firstcomposeapp.model.Order
 import com.ali.firstcomposeapp.model.OrderDetail
 import com.ali.firstcomposeapp.model.OrderStatus
+import com.ali.firstcomposeapp.data.local.dao.OrderDao
+import com.ali.firstcomposeapp.data.local.dao.OrderItemDao
+import javax.inject.Inject
+import javax.inject.Singleton
 
 
-class OrderRepository(
+
+@Singleton
+class OrderRepository @Inject constructor(
     private val orderDao: OrderDao,
     private val orderItemDao: OrderItemDao
 ) {

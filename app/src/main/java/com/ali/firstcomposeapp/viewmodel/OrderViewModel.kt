@@ -1,9 +1,7 @@
 package com.ali.firstcomposeapp.viewmodel
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ali.firstcomposeapp.data.local.DatabaseProvider
 import com.ali.firstcomposeapp.data.repository.OrderRepository
 import com.ali.firstcomposeapp.model.OrderUiState
 import com.ali.firstcomposeapp.viewmodel.event.OrderEvent
@@ -12,16 +10,13 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 
-class OrderViewModel(
-    application: Application
-) : AndroidViewModel(application) {
-    private val database = DatabaseProvider.getDatabase(application)
-
-    private val repository = OrderRepository(
-        database.orderDao(),
-        orderItemDao = database.orderItemDao()
-    )
+@HiltViewModel
+class OrderViewModel @Inject constructor(
+    private val repository: OrderRepository
+) : ViewModel() {
     private val _uiState =
         MutableStateFlow(OrderUiState())
     val uiState: StateFlow<OrderUiState> =

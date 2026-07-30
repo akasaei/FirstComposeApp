@@ -30,7 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.ali.firstcomposeapp.model.Order
 import com.ali.firstcomposeapp.model.OrderDetail
 import com.ali.firstcomposeapp.model.OrderDetailUiState
@@ -54,7 +54,7 @@ const val columnWeight7 = .7f
 @Composable
 fun OrderDetailScreen(
     modifier: Modifier = Modifier,
-    viewModel: OrderDetailViewModel = viewModel(),
+    viewModel: OrderDetailViewModel = hiltViewModel(),
     orderId: String,
     onOrderSummary: () -> Unit
 ) {

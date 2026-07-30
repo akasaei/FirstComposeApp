@@ -33,7 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.ali.firstcomposeapp.model.Order
 import com.ali.firstcomposeapp.model.OrderStatus
 import com.ali.firstcomposeapp.model.OrderUiState
@@ -46,7 +46,7 @@ import com.ali.firstcomposeapp.viewmodel.event.OrderEvent
 @Composable
 fun OrderSummaryScreen(
     modifier: Modifier = Modifier,
-    viewModel: OrderViewModel = viewModel(),
+    viewModel: OrderViewModel = hiltViewModel(),
     onOrderDetailClick : (String) -> Unit
 ) {
     val uiState by
