@@ -16,21 +16,19 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ali.firstcomposeapp.model.Order
 import com.ali.firstcomposeapp.model.OrderDetail
 import com.ali.firstcomposeapp.model.OrderDetailUiState
@@ -44,8 +42,8 @@ import com.ali.firstcomposeapp.util.displayName
 import com.ali.firstcomposeapp.util.priorityName
 import com.ali.firstcomposeapp.viewmodel.OrderDetailViewModel
 
-const val columnWeight1 = .1f
-const val columnWeight2 = .2f
+const val columnWeight1 = .05f
+const val columnWeight2 = .25f
 const val columnWeight3 = .3f
 const val columnWeight4 = .4f
 const val columnWeight7 = .7f
@@ -53,22 +51,14 @@ const val columnWeight7 = .7f
 
 @Composable
 fun OrderDetailScreen(
-    modifier: Modifier = Modifier,
-    viewModel: OrderDetailViewModel = hiltViewModel(),
-    orderId: String,
-    onOrderSummary: () -> Unit
+    viewModel: OrderDetailViewModel,
+    onBackClick: () -> Unit
 ) {
-    LaunchedEffect(orderId) {
-        viewModel.fetchOrderDetail(orderId)
-    }
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    val uiState by
-    viewModel.uiState.collectAsState()
     OrderDetailContent(
         uiState = uiState,
-        orderId = orderId,
-        modifier = modifier,
-        onOrderSummary = onOrderSummary
+        onOrderSummary = onBackClick
     )
 
 }
@@ -77,32 +67,32 @@ fun OrderDetailScreen(
 @Composable
 fun OrderDetailContent(
     uiState: OrderDetailUiState,
-    orderId: String?,
     modifier: Modifier = Modifier,
     onOrderSummary: () -> Unit
 ) {
+
     Scaffold(
         modifier = modifier.fillMaxWidth(),
         topBar = {
             Column {
                 Spacer(modifier = Modifier.height(48.dp))
-                Text(
-                    text = "Order Detail",
-                    style = MaterialTheme.typography.headlineLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(20.dp),
-                    textAlign = TextAlign.Center
-                )
-                Spacer(modifier = Modifier.height(48.dp))
-                Row {
+                Row(modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp)) {
+                    Text(
+                        text = "Order Detail",
+                        style = MaterialTheme.typography.headlineLarge,
+                        color = MaterialTheme.colorScheme.primary,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.weight(columnWeight7)
+                    )
                     TextButton(
                         onClick = onOrderSummary, modifier = Modifier
-                            .padding(start = 20.dp, top = 15.dp)
+                            .padding(end = 20.dp, top = 0.dp)
+                            .weight(.15f)
                     ) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            imageVector = Icons.Default.Close,
                             contentDescription = "Order Summary",
                             tint = MaterialTheme.colorScheme.inverseSurface,
                             modifier = Modifier
@@ -110,16 +100,7 @@ fun OrderDetailContent(
                                 .padding(0.dp)
                         )
                     }
-                    Text(
-                        text = "Order ID:  $orderId",
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier
-                            .padding(20.dp),
-                        textAlign = TextAlign.Center
-                    )
                 }
-
             }
         }
     ) { paddingValues ->
@@ -134,7 +115,9 @@ fun OrderDetailContent(
                     errorMessage = uiState.error
                 )
 
-                else -> OrderDetails(uiState.selectedOrder)
+                uiState.selectedOrder != null -> {
+                    OrderDetails(uiState.selectedOrder)
+                }
             }
         }
     }
@@ -146,14 +129,19 @@ fun OrderDetails(selectedOrder: OrderDetail?) {
     val orderItems = selectedOrder?.items
     Column(
         modifier = Modifier
-            .padding(start = 10.dp, top = 10.dp)
+            .padding(start = 5.dp, top = 10.dp)
     ) {
-        if (order != null) {
-            with(order) {
-                Text("Customer: ${this.customer}")
-                Text("Status: ${this.status.displayName()}")
-                Text("Priority: ${this.priority.priorityName()}")
-                Text("Total Value : ${this.totalValue.asCurrency()}")
+        Column(
+            modifier = Modifier.padding(start = 10.dp)
+        ) {
+            if (order != null) {
+                with(order) {
+                    Text("Id: ${this.id}")
+                    Text("Customer: ${this.customer}")
+                    Text("Status: ${this.status.displayName()}")
+                    Text("Priority: ${this.priority.priorityName()}")
+                    Text("Total Value : ${this.totalValue.asCurrency()}")
+                }
             }
         }
 
@@ -162,7 +150,7 @@ fun OrderDetails(selectedOrder: OrderDetail?) {
 
         Text("Items (${selectedOrder?.totalItemCount})")
         LazyColumn(
-            contentPadding = PaddingValues(6.dp),
+            contentPadding = PaddingValues(0.dp),
             modifier = Modifier.fillMaxSize()
         ) {
             item {
@@ -205,7 +193,7 @@ fun OrderDetails(selectedOrder: OrderDetail?) {
                         Modifier
                             .fillMaxWidth()
                     ) {
-                        TableCell(text = "There is no additional detail available!", weight = 1.0f)
+                        TableCell(text = "There is no additional detail available!", weight = 1.0f, modifier = Modifier)
                     }
                 }
             }
@@ -258,16 +246,15 @@ fun OrderDetailPreview() {
                     items = listOf(
                         OrderItem(
                             id = "ITEM-001",
-                            productName = "SIM Card",
+                            productName = "Virtual SIM",
                             quantity = 2,
-                            unitPrice = 20.0
+                            unitPrice = 199.99
                         )
                     )
                 ),
                 isLoading = false,
                 error = null
             ),
-            orderId = "1",
             onOrderSummary = {}
         )
     }

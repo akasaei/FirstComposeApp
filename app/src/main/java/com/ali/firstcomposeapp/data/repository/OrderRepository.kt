@@ -12,9 +12,12 @@ import com.ali.firstcomposeapp.model.OrderDetail
 import com.ali.firstcomposeapp.model.OrderStatus
 import com.ali.firstcomposeapp.data.local.dao.OrderDao
 import com.ali.firstcomposeapp.data.local.dao.OrderItemDao
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
-
 
 
 @Singleton
@@ -63,14 +66,6 @@ class OrderRepository @Inject constructor(
         )
     )
 
-    suspend fun getOrders(): List<Order> {
-
-        seedDatabase()
-
-        return orderDao
-            .getAll()
-            .map(OrderEntity::toOrder)
-    }
 
     private suspend fun seedDatabase() {
 
@@ -79,6 +74,18 @@ class OrderRepository @Inject constructor(
             orderItemDao.insertAll(sampleOrderItems)
         }
     }
+
+    fun observeOrders(): Flow<List<Order>> =
+        flow {
+            seedDatabase()
+
+            emitAll(
+                orderDao.observeAll()
+                    .map { entities ->
+                        entities.map(OrderEntity::toOrder)
+                    }
+            )
+        }
 
     suspend fun getOrder(id: String): Order? {
         seedDatabase()
@@ -96,16 +103,20 @@ class OrderRepository @Inject constructor(
         orderDao.deleteById(id = id)
     }
 
-    suspend fun getOrderDetail(
+    fun observeOrderDetail(
         id: String
-    ): OrderDetail? {
+    ): Flow<OrderDetail?> =
+        flow {
+            seedDatabase()
 
-        seedDatabase()
-
-        return orderDao
-            .getOrderWithItems(id)?.toOrderDetail()
-
-    }
+            emitAll(
+                orderDao
+                    .observeOrderWithItems(id)
+                    .map { relation ->
+                        relation?.toOrderDetail()
+                    }
+            )
+        }
 }
 
 

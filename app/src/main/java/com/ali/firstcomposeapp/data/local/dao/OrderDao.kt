@@ -7,12 +7,13 @@ import androidx.room.Query
 import androidx.room.Transaction
 import com.ali.firstcomposeapp.data.local.OrderEntity
 import com.ali.firstcomposeapp.data.local.OrderWithItems
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface OrderDao {
 
     @Query("SELECT * FROM orders LIMIT :limit OFFSET :offset")
-    suspend fun getAll(limit: Int = 10, offset: Int = 0): List<OrderEntity>
+    fun observeAll(limit: Int = 10, offset: Int = 0): Flow<List<OrderEntity>>
 
     @Query("SELECT * FROM orders WHERE id = :id")
     suspend fun getById(id: String): OrderEntity?
@@ -30,14 +31,10 @@ interface OrderDao {
     suspend fun deleteById(id: String)
 
     @Transaction
-    @Query("""
-    SELECT *
-    FROM orders
-    WHERE id = :id
-""")
-    suspend fun getOrderWithItems(
+    @Query("SELECT * FROM orders WHERE id = :id")
+    fun observeOrderWithItems(
         id: String
-    ): OrderWithItems?
+    ): Flow<OrderWithItems?>
 
     @Query("SELECT COUNT(*) FROM orders")
     suspend fun count(): Int

@@ -1,6 +1,7 @@
 package com.ali.firstcomposeapp.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -26,7 +27,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,11 +34,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ali.firstcomposeapp.model.Order
 import com.ali.firstcomposeapp.model.OrderStatus
 import com.ali.firstcomposeapp.model.OrderUiState
+import com.ali.firstcomposeapp.ui.components.DeleteRow
 import com.ali.firstcomposeapp.ui.components.TableCell
 import com.ali.firstcomposeapp.ui.components.TableHeaderCell
+import com.ali.firstcomposeapp.ui.theme.Blue80
 import com.ali.firstcomposeapp.ui.theme.FirstComposeAppTheme
 import com.ali.firstcomposeapp.viewmodel.OrderViewModel
 import com.ali.firstcomposeapp.viewmodel.event.OrderEvent
@@ -47,10 +50,11 @@ import com.ali.firstcomposeapp.viewmodel.event.OrderEvent
 fun OrderSummaryScreen(
     modifier: Modifier = Modifier,
     viewModel: OrderViewModel = hiltViewModel(),
-    onOrderDetailClick : (String) -> Unit
+    onOrderDetailClick : (String) -> Unit,
+    onDeleteOrder: (String) -> Unit
 ) {
     val uiState by
-    viewModel.uiState.collectAsState()
+    viewModel.uiState.collectAsStateWithLifecycle()
 
     OrderSummaryContent(
         uiState = uiState,
@@ -58,7 +62,8 @@ fun OrderSummaryScreen(
         refresh = {
             viewModel.onEvent(OrderEvent.Refresh)
         },
-        onOrderDetailClick  = onOrderDetailClick
+        onOrderDetailClick = onOrderDetailClick,
+        onDeleteOrderClick = onDeleteOrder
     )
 }
 
@@ -67,7 +72,8 @@ fun OrderSummaryContent(
     uiState: OrderUiState,
     refresh: () -> Unit,
     modifier: Modifier = Modifier,
-    onOrderDetailClick : (String) -> Unit
+    onOrderDetailClick : (String) -> Unit,
+    onDeleteOrderClick : (String) -> Unit
 ) {
     Scaffold(
         modifier = modifier.fillMaxWidth(),
@@ -113,7 +119,7 @@ fun OrderSummaryContent(
                     errorMessage = uiState.error
                 )
 
-                else -> OrderList(uiState.orders, onOrderDetailClick  = onOrderDetailClick)
+                else -> OrderList(uiState.orders, onOrderDetailClick  = onOrderDetailClick, onDeleteOrderClick = onDeleteOrderClick)
             }
         }
     }
@@ -170,11 +176,12 @@ fun ErrorScreen(
 @Composable
 fun OrderList(
     orders: List<Order>,
-    onOrderDetailClick : (String) -> Unit
+    onOrderDetailClick: (String) -> Unit,
+    onDeleteOrderClick: (String) -> Unit
 ) {
-    val columnWeight4 = .4f
     val columnWeight3 = .3f
     val columnWeight7 = .7f
+    val columnWeight1 = .1f
 
     val totalValue = orders.sumOf { it.totalValue }
 
@@ -192,7 +199,7 @@ fun OrderList(
             ) {
                 TableHeaderCell(
                     text = "Id",
-                    weight = columnWeight4,
+                    weight = columnWeight3,
                     shape = RoundedCornerShape(topStart = 10.dp)
                 )
                 TableHeaderCell(
@@ -201,7 +208,11 @@ fun OrderList(
                 )
                 TableHeaderCell(
                     text = "Value",
-                    weight = columnWeight3,
+                    weight = columnWeight3
+                )
+                TableHeaderCell(
+                    text = "X",
+                    weight = columnWeight1,
                     shape = RoundedCornerShape(topEnd = 10.dp)
                 )
             }
@@ -209,10 +220,13 @@ fun OrderList(
         items(items = orders, key = { it.id }) { currentOrder ->
             Row(Modifier
                 .fillMaxWidth()
-                .clickable(onClick = { onOrderDetailClick(currentOrder.id) })) {
-                TableCell(text = currentOrder.id, weight = columnWeight4)
+                .border(1.dp, Blue80)
+                ) {
+
+                TableCell(text = currentOrder.id, weight = columnWeight3, modifier = Modifier.clickable(onClick = { onOrderDetailClick(currentOrder.id) }))
                 TableCell(text = currentOrder.customer, weight = columnWeight3)
                 TableCell(text = currentOrder.totalValue.toString(), weight = columnWeight3)
+                DeleteRow( weight = columnWeight1, modifier = Modifier.clickable(onClick = {onDeleteOrderClick(currentOrder.id)}))
             }
         }
         item {
@@ -247,7 +261,8 @@ fun OrderSummaryPreview() {
                 error = null
             ),
             refresh = {},
-            onOrderDetailClick = {}
+            onOrderDetailClick = {},
+            onDeleteOrderClick = {}
         )
     }
 }
