@@ -70,7 +70,7 @@ fun BottomNavigationBar(
 
 @Preview(apiLevel = 36)
 @Composable
-fun HorizontalFloatingToolbarPreview() {
+fun BottomNavigationBarPreview() {
     FirstComposeAppTheme {
         BottomNavigationBar(
             onHomeClick = {},

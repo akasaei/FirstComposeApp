@@ -2,6 +2,7 @@ package com.ali.firstcomposeapp.ui.screens
 
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -17,6 +18,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.Card
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -76,9 +79,11 @@ fun OrderDetailContent(
         topBar = {
             Column {
                 Spacer(modifier = Modifier.height(48.dp))
-                Row(modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(20.dp)) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(20.dp)
+                ) {
                     Text(
                         text = "Order Detail",
                         style = MaterialTheme.typography.headlineLarge,
@@ -116,7 +121,7 @@ fun OrderDetailContent(
                 )
 
                 uiState.selectedOrder != null -> {
-                    OrderDetails(uiState.selectedOrder)
+                    OrderDetails(uiState.selectedOrder, modifier)
                 }
             }
         }
@@ -124,98 +129,123 @@ fun OrderDetailContent(
 }
 
 @Composable
-fun OrderDetails(selectedOrder: OrderDetail?) {
+fun OrderDetails(
+    selectedOrder: OrderDetail?,
+    modifier: Modifier = Modifier
+) {
     val order = selectedOrder?.order
     val orderItems = selectedOrder?.items
-    Column(
-        modifier = Modifier
-            .padding(start = 5.dp, top = 10.dp)
+    LazyColumn(
+        modifier = modifier.fillMaxSize(),
+        contentPadding = PaddingValues(5.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(start = 10.dp)
-        ) {
-            if (order != null) {
-                with(order) {
-                    Text("Id: ${this.id}")
-                    Text("Customer: ${this.customer}")
-                    Text("Status: ${this.status.displayName()}")
-                    Text("Priority: ${this.priority.priorityName()}")
-                    Text("Total Value : ${this.totalValue.asCurrency()}")
+        item {
+            Text(
+                text = "Order ${order?.id}",
+                style = MaterialTheme.typography.headlineMedium
+            )
+        }
+        item {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 10.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    if (order != null) {
+                        with(order) {
+                            Text("Customer: ${this.customer}")
+                            Text("Status: ${this.status.displayName()}")
+                            Text("Priority: ${this.priority.priorityName()}")
+                            Text("Total Value : ${this.totalValue.asCurrency()}")
+                        }
+                    }
                 }
             }
         }
-
-        Spacer(modifier = Modifier.height(48.dp))
-
-
-        Text("Items (${selectedOrder?.totalItemCount})")
-        LazyColumn(
-            contentPadding = PaddingValues(0.dp),
-            modifier = Modifier.fillMaxSize()
-        ) {
+        item {
+            Text(
+                text = "Items (${selectedOrder?.totalItemCount})",
+                style = MaterialTheme.typography.titleSmall
+            )
+            HorizontalDivider(modifier = Modifier.padding(bottom = 10.dp))
+        }
+        item {
+            OrderItemCardHeader()
+        }
+        if (!orderItems.isNullOrEmpty()) {
+            items(
+                items = orderItems,
+                key = { it.id }) { currentOrderItem ->
+                OrderItemCard(currentOrderItem)
+            }
+        } else {
             item {
-
                 Row(
                     Modifier
-                        .background(
-                            color = MaterialTheme.colorScheme.primaryContainer,
-                            shape = RoundedCornerShape(topStart = 10.dp, topEnd = 10.dp)
-                        )
+                        .fillMaxWidth()
                 ) {
-                    TableHeaderCell(
-                        text = "Id",
-                        weight = columnWeight3,
-                        shape = RoundedCornerShape(topStart = 10.dp)
+                    TableCell(
+                        text = "There is no additional detail available!",
+                        weight = 1.0f,
+                        modifier = Modifier
                     )
-                    TableHeaderCell(
-                        text = "Product",
-                        weight = columnWeight4
-                    )
-                    TableHeaderCell(
-                        text = "#",
-                        weight = columnWeight1
-                    )
-                    TableHeaderCell(
-                        text = "Price",
-                        weight = columnWeight2,
-                        shape = RoundedCornerShape(topEnd = 10.dp)
-                    )
-                }
-
-            }
-            if (!orderItems.isNullOrEmpty()) {
-                items(items = orderItems, key = { it.id }) { currentOrderItem ->
-                    OrderItemCard(currentOrderItem)
-                }
-            } else {
-                item {
-                    Row(
-                        Modifier
-                            .fillMaxWidth()
-                    ) {
-                        TableCell(text = "There is no additional detail available!", weight = 1.0f, modifier = Modifier)
-                    }
-                }
-            }
-            item {
-                if (!orderItems.isNullOrEmpty()) {
-                    Row(
-                        Modifier
-                            .fillMaxWidth()
-                            .background(
-                                color = MaterialTheme.colorScheme.secondaryContainer,
-                                shape = RoundedCornerShape(bottomStart = 10.dp, bottomEnd = 10.dp)
-                            )
-                    ) {
-                        TableCell(text = "Total", weight = columnWeight7)
-                        TableCell(
-                            text = selectedOrder.totalItemValue.asCurrency(),
-                            weight = columnWeight3
-                        )
-                    }
                 }
             }
         }
+
+        item {
+            if (!orderItems.isNullOrEmpty()) {
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .background(
+                            color = MaterialTheme.colorScheme.secondaryContainer,
+                            shape = RoundedCornerShape(bottomStart = 10.dp, bottomEnd = 10.dp)
+                        )
+                ) {
+                    TableCell(text = "Total", weight = columnWeight7)
+                    TableCell(
+                        text = selectedOrder.totalItemValue.asCurrency(),
+                        weight = columnWeight3
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun OrderItemCardHeader() {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .background(
+                color = MaterialTheme.colorScheme.primaryContainer,
+                shape = RoundedCornerShape(topStart = 10.dp, topEnd = 10.dp)
+            )
+    ) {
+        TableHeaderCell(
+            text = "Id",
+            weight = columnWeight3,
+            shape = RoundedCornerShape(topStart = 10.dp)
+        )
+        TableHeaderCell(
+            text = "Product",
+            weight = columnWeight4
+        )
+        TableHeaderCell(
+            text = "#",
+            weight = columnWeight1
+        )
+        TableHeaderCell(
+            text = "Price",
+            weight = columnWeight2,
+            shape = RoundedCornerShape(topEnd = 10.dp)
+        )
     }
 }
 

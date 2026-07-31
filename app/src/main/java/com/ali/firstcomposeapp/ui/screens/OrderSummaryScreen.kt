@@ -51,7 +51,7 @@ import com.ali.firstcomposeapp.viewmodel.event.OrderEvent
 fun OrderSummaryScreen(
     modifier: Modifier = Modifier,
     viewModel: OrderViewModel = hiltViewModel(),
-    onOrderDetailClick : (String) -> Unit,
+    onOrderDetailClick: (String) -> Unit,
     onDeleteOrder: (String) -> Unit
 ) {
     val uiState by
@@ -73,31 +73,31 @@ fun OrderSummaryContent(
     uiState: OrderUiState,
     refresh: () -> Unit,
     modifier: Modifier = Modifier,
-    onOrderDetailClick : (String) -> Unit,
-    onDeleteOrderClick : (String) -> Unit
+    onOrderDetailClick: (String) -> Unit,
+    onDeleteOrderClick: (String) -> Unit
 ) {
     Scaffold(
         modifier = modifier.fillMaxWidth(),
         topBar = {
             Column {
                 Spacer(modifier = Modifier.height(48.dp))
-                Text(
-                    text = "Order Summary",
-                    style = MaterialTheme.typography.headlineLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(20.dp),
-                    textAlign = TextAlign.Center
-                )
-                Spacer(modifier = Modifier.height(48.dp))
                 Row {
+                    Text(
+                        text = "Order Summary",
+                        style = MaterialTheme.typography.headlineLarge,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                            .padding(20.dp)
+                            .weight(.8f),
+                        textAlign = TextAlign.Center,
+                    )
                     TextButton(
                         onClick = refresh, modifier = Modifier
-                            .padding(start = 10.dp)
+                            .padding(top = 20.dp, end = 10.dp)
+                            .weight(.2f)
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Refresh ,
+                            imageVector = Icons.Default.Refresh,
                             contentDescription = "Order Summary",
                             tint = MaterialTheme.colorScheme.inverseSurface,
                             modifier = Modifier
@@ -120,7 +120,11 @@ fun OrderSummaryContent(
                     errorMessage = uiState.error
                 )
 
-                else -> OrderList(uiState.orders, onOrderDetailClick  = onOrderDetailClick, onDeleteOrderClick = onDeleteOrderClick)
+                else -> OrderList(
+                    uiState.orders,
+                    onOrderDetailClick = onOrderDetailClick,
+                    onDeleteOrderClick = onDeleteOrderClick
+                )
             }
         }
     }
@@ -181,6 +185,7 @@ fun OrderList(
     onDeleteOrderClick: (String) -> Unit
 ) {
     val columnWeight3 = .3f
+    val columnWeight6 = .6f
     val columnWeight7 = .7f
     val columnWeight1 = .1f
 
@@ -190,7 +195,7 @@ fun OrderList(
         contentPadding = PaddingValues(16.dp),
         modifier = Modifier.fillMaxSize()
     ) {
-       item {
+        item {
             Row(
                 Modifier
                     .background(
@@ -212,22 +217,30 @@ fun OrderList(
                     weight = columnWeight3
                 )
                 TableHeaderCell(
-                    text = "X",
+                    text = " ",
                     weight = columnWeight1,
                     shape = RoundedCornerShape(topEnd = 10.dp)
                 )
             }
         }
         items(items = orders, key = { it.id }) { currentOrder ->
-            Row(Modifier
-                .fillMaxWidth()
-                .border(1.dp, Blue80)
-                ) {
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .border(1.dp, Blue80)
+            ) {
 
-                TableCell(text = currentOrder.id, weight = columnWeight3, modifier = Modifier.clickable(onClick = { onOrderDetailClick(currentOrder.id) }))
+                TableCell(
+                    text = currentOrder.id,
+                    weight = columnWeight3,
+                    modifier = Modifier.clickable(onClick = { onOrderDetailClick(currentOrder.id) })
+                )
                 TableCell(text = currentOrder.customer, weight = columnWeight3)
                 TableCell(text = currentOrder.totalValue.asCurrency(), weight = columnWeight3)
-                DeleteRow( weight = columnWeight1, modifier = Modifier.clickable(onClick = {onDeleteOrderClick(currentOrder.id)}))
+                DeleteRow(
+                    weight = columnWeight1,
+                    modifier = Modifier.clickable(onClick = { onDeleteOrderClick(currentOrder.id) })
+                )
             }
         }
         item {
@@ -239,8 +252,8 @@ fun OrderList(
                         shape = RoundedCornerShape(bottomStart = 10.dp, bottomEnd = 10.dp)
                     )
             ) {
-                TableCell(text = "Total", weight = columnWeight7)
-                TableCell(text = totalValue.asCurrency(), weight = columnWeight3)
+                TableCell(text = "Total", weight = columnWeight6)
+                TableCell(text = totalValue.asCurrency(), weight = columnWeight4)
             }
         }
     }
