@@ -27,14 +27,58 @@ class OrderViewModel @Inject constructor(
 
     fun onEvent(event: OrderEvent) {
         when (event) {
-
             is OrderEvent.Refresh ->
-                fetchOrders()
+                refreshOrders()
+        }
+    }
+
+    private fun refreshOrders() {
+        viewModelScope.launch {
+
+            _uiState.update {
+                it.copy(
+                    isRefreshing = true,
+                    refreshError = null
+                )
+            }
+
+            try {
+                repository.refreshOrders()
+                repository.refreshOrderItem()
+
+                _uiState.update {
+                    it.copy(
+                        isRefreshing = false,
+                        refreshError = null
+                    )
+                }
+
+            } catch (exception: Exception) {
+
+                _uiState.update { state ->
+
+                    if (state.orders.isEmpty()) {
+                        state.copy(
+                            isLoading = false,
+                            isRefreshing = false,
+                            error = exception.message
+                                ?: "Unable to load orders"
+                        )
+                    } else {
+                        state.copy(
+                            isRefreshing = false,
+                            refreshError = exception.message
+                                ?: "Unable to refresh orders"
+                        )
+                    }
+                }
+            }
         }
     }
 
     init {
-        fetchOrders()
+        observeOrders()
+        refreshOrders()
     }
 
     private fun fetchOrders() {
@@ -67,6 +111,25 @@ class OrderViewModel @Inject constructor(
                 }
         }
     }
+
+
+    private fun observeOrders() {
+        viewModelScope.launch {
+            repository
+                .observeOrders()
+                .collect { orders ->
+
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            orders = orders,
+                            error = null
+                        )
+                    }
+                }
+        }
+    }
+
 
     fun addOrder(order: Order) {
         viewModelScope.launch {

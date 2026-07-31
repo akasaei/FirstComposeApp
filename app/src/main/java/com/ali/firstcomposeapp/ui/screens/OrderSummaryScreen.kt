@@ -22,6 +22,7 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -82,6 +83,7 @@ fun OrderSummaryContent(
             Column {
                 Spacer(modifier = Modifier.height(48.dp))
                 Row {
+
                     Text(
                         text = "Order Summary",
                         style = MaterialTheme.typography.headlineLarge,
@@ -105,6 +107,16 @@ fun OrderSummaryContent(
                                 .padding(0.dp)
                         )
                     }
+                    if (uiState.refreshError != null) {
+                        Icon(
+                            imageVector = Icons.Default.Warning,
+                            contentDescription = "Error refreshing the data",
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier
+                                .size(28.dp)
+                                .padding(0.dp)
+                        )
+                    }
                 }
             }
         }
@@ -114,17 +126,29 @@ fun OrderSummaryContent(
                 .padding(paddingValues)
                 .fillMaxSize()
         ) {
+            if (uiState.isRefreshing) {
+                LinearProgressIndicator(
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 0.dp)
+                )
+            }
             when {
-                uiState.isLoading -> LoadingScreen()
-                uiState.error != null -> ErrorScreen(
-                    errorMessage = uiState.error
-                )
+                uiState.isLoading && uiState.orders.isEmpty() -> {
+                    LoadingScreen()
+                }
 
-                else -> OrderList(
-                    uiState.orders,
-                    onOrderDetailClick = onOrderDetailClick,
-                    onDeleteOrderClick = onDeleteOrderClick
-                )
+                uiState.error != null && uiState.orders.isEmpty() -> {
+                    ErrorScreen(
+                        errorMessage = uiState.error
+                    )
+                }
+
+                else -> {
+                    OrderList(
+                        uiState.orders,
+                        onOrderDetailClick = onOrderDetailClick,
+                        onDeleteOrderClick = onDeleteOrderClick
+                    )
+                }
             }
         }
     }

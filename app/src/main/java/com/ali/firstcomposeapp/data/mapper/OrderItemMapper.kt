@@ -1,7 +1,17 @@
 package com.ali.firstcomposeapp.data.mapper
 
 import com.ali.firstcomposeapp.data.local.OrderItemEntity
+import com.ali.firstcomposeapp.data.remote.dto.OrderItemDto
 import com.ali.firstcomposeapp.model.OrderItem
+
+fun OrderItemDto.toEntity(): OrderItemEntity =
+    OrderItemEntity(
+        id = id,
+        orderId = orderId,
+        productName = productName,
+        quantity = quantity,
+        unitPrice = unitPrice
+    )
 
 fun OrderItemEntity.toOrderItem() =
     OrderItem(
