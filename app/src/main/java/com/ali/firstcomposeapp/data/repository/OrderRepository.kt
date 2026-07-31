@@ -34,18 +34,13 @@ class OrderRepository @Inject constructor(
 
     suspend fun refreshOrders() {
         val remoteOrders = orderApi.getOrders()
-
-        val entities = remoteOrders.map { it.toEntity() }
-
-        orderDao.insertAll(entities)
-    }
-
-    suspend fun refreshOrderItem() {
         val remoteOrderItems = orderItemApi.getOrderItems()
 
-        val entities = remoteOrderItems.map { it.toEntity() }
+        val entities = remoteOrders.map { it.toEntity() }
+        val itemEntities = remoteOrderItems.map { it.toEntity() }
 
-        orderItemDao.insertAll(entities)
+        orderDao.insertAll(entities)
+        orderItemDao.insertAll(itemEntities)
     }
 
 

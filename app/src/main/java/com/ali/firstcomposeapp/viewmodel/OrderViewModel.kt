@@ -44,7 +44,6 @@ class OrderViewModel @Inject constructor(
 
             try {
                 repository.refreshOrders()
-                repository.refreshOrderItem()
 
                 _uiState.update {
                     it.copy(

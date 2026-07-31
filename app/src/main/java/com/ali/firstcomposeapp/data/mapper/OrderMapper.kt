@@ -19,7 +19,9 @@ fun OrderEntity.toOrder(): Order = Order(
 fun OrderDto.toOrder(): Order = Order(
     id = id,
     customer = customer,
-    status = OrderStatus.valueOf(status),
+    status = runCatching {
+        OrderStatus.valueOf(status.uppercase())
+    }.getOrDefault(OrderStatus.FAILED),
     priority = priority,
     totalValue = totalValue
 )
