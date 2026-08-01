@@ -2,6 +2,10 @@
 
 package com.ali.firstcomposeapp.data.repository
 
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
+import androidx.paging.map
 import com.ali.firstcomposeapp.data.local.OrderEntity
 import com.ali.firstcomposeapp.data.local.dao.OrderDao
 import com.ali.firstcomposeapp.data.local.dao.OrderItemDao
@@ -27,22 +31,23 @@ class OrderRepository @Inject constructor(
     private val orderItemApi: OrderItemApi
 ) {
 
-    fun getOrdersPage(
-        page: Int,
-        pageSize: Int
-    ): Flow<List<Order>> =
-        flow {
+    companion object {
+        private const val PAGE_SIZE = 10
+    }
 
-            val offset = page * pageSize
-            emitAll(
-                orderDao.getPage(
-                    limit = pageSize,
-                    offset = offset
-                )
-                    .map { entities ->
-                        entities.map(OrderEntity::toOrder)
-                    }
-            )
+    fun observePagedOrders(): Flow<PagingData<Order>> =
+        Pager(
+            config = PagingConfig(
+                pageSize = PAGE_SIZE,
+                initialLoadSize = PAGE_SIZE * 2,
+                prefetchDistance = 3,
+                enablePlaceholders = false
+            ),
+            pagingSourceFactory = {
+                orderDao.pagingSource()
+            }
+        ).flow.map { pagingData ->
+            pagingData.map(OrderEntity::toOrder)
         }
 
 

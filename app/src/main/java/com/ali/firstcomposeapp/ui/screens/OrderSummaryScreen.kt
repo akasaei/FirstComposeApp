@@ -28,17 +28,17 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.paging.PagingData
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.collectAsLazyPagingItems
 import com.ali.firstcomposeapp.model.Order
 import com.ali.firstcomposeapp.model.OrderStatus
-import com.ali.firstcomposeapp.model.OrderUiState
 import com.ali.firstcomposeapp.ui.components.DeleteRow
 import com.ali.firstcomposeapp.ui.components.TableCell
 import com.ali.firstcomposeapp.ui.components.TableHeaderCell
@@ -47,6 +47,9 @@ import com.ali.firstcomposeapp.ui.theme.FirstComposeAppTheme
 import com.ali.firstcomposeapp.util.asCurrency
 import com.ali.firstcomposeapp.viewmodel.OrderViewModel
 import com.ali.firstcomposeapp.viewmodel.event.OrderEvent
+import androidx.paging.LoadState
+import androidx.paging.compose.itemKey
+import kotlinx.coroutines.flow.flowOf
 
 @Composable
 fun OrderSummaryScreen(
@@ -55,17 +58,14 @@ fun OrderSummaryScreen(
     onOrderDetailClick: (String) -> Unit,
     onDeleteOrder: (String) -> Unit
 ) {
-    val uiState by
-    viewModel.uiState.collectAsStateWithLifecycle()
+    val orders =
+        viewModel.orders.collectAsLazyPagingItems()
 
     OrderSummaryContent(
-        uiState = uiState,
+        orders = orders,
         modifier = modifier,
         refresh = {
             viewModel.onEvent(OrderEvent.Refresh)
-        },
-        loadMore = {
-            viewModel.onEvent(OrderEvent.NextPage)
         },
         onOrderDetailClick = onOrderDetailClick,
         onDeleteOrderClick = onDeleteOrder
@@ -74,15 +74,14 @@ fun OrderSummaryScreen(
 
 @Composable
 fun OrderSummaryContent(
-    uiState: OrderUiState,
+    orders: LazyPagingItems<Order>,
     refresh: () -> Unit,
-    loadMore: () -> Unit,
     modifier: Modifier = Modifier,
     onOrderDetailClick: (String) -> Unit,
     onDeleteOrderClick: (String) -> Unit
 ) {
     Scaffold(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxSize(),
         topBar = {
             Column {
                 Spacer(modifier = Modifier.height(48.dp))
@@ -111,16 +110,6 @@ fun OrderSummaryContent(
                                 .padding(0.dp)
                         )
                     }
-                    if (uiState.refreshError != null) {
-                        Icon(
-                            imageVector = Icons.Default.Warning,
-                            contentDescription = "Error refreshing the data",
-                            tint = MaterialTheme.colorScheme.error,
-                            modifier = Modifier
-                                .size(28.dp)
-                                .padding(0.dp)
-                        )
-                    }
                 }
             }
         }
@@ -130,33 +119,57 @@ fun OrderSummaryContent(
                 .padding(paddingValues)
                 .fillMaxSize()
         ) {
-            if (uiState.isRefreshing) {
-                LinearProgressIndicator(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 0.dp)
-                )
-            }
-            when {
-                uiState.isLoading && uiState.orders.isEmpty() -> {
-                    LoadingScreen()
+            OrderList(
+                orders,
+                onOrderDetailClick = onOrderDetailClick,
+                onDeleteOrderClick = onDeleteOrderClick
+            )
+            when (
+                val appendState =
+                    orders.loadState.append
+            ) {
+                is LoadState.Loading -> {
+                    LinearProgressIndicator(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 0.dp)
+                    )
                 }
 
-                uiState.error != null && uiState.orders.isEmpty() -> {
+                is LoadState.Error -> {
                     ErrorScreen(
-                        errorMessage = uiState.error
+                        errorMessage = appendState
+                            .error
+                            .message
+                            ?: "Unable to load more orders"
                     )
                 }
 
-                else -> {
-                    OrderList(
-                        uiState.orders,
-                        onOrderDetailClick = onOrderDetailClick,
-                        onDeleteOrderClick = onDeleteOrderClick,
-                        onLoadMoreClick = loadMore,
-                        hasMore = uiState.hasMore
-                    )
+                is LoadState.NotLoading -> Unit
+            }
+
+            when (
+                val refreshState =
+                    orders.loadState.refresh
+            ) {
+                is LoadState.Loading -> {
+                    if (orders.itemCount == 0) {
+                        LoadingScreen()
+                    }
                 }
+
+                is LoadState.Error -> {
+                    if (orders.itemCount == 0) {
+                        ErrorScreen(
+                            errorMessage = refreshState
+                                .error
+                                .message
+                                ?: "Unable to load more orders"
+                        )
+                    }
+                }
+
+                is LoadState.NotLoading -> Unit
             }
         }
     }
@@ -164,10 +177,11 @@ fun OrderSummaryContent(
 
 @Composable
 fun LoadingScreen() {
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        contentAlignment = Alignment.Center
     ) {
         CircularProgressIndicator(
             modifier = Modifier.size(64.dp),
@@ -212,18 +226,16 @@ fun ErrorScreen(
 
 @Composable
 fun OrderList(
-    orders: List<Order>,
+    orders: LazyPagingItems<Order>,
     onOrderDetailClick: (String) -> Unit,
-    onDeleteOrderClick: (String) -> Unit,
-    onLoadMoreClick: () -> Unit,
-    hasMore: Boolean
+    onDeleteOrderClick: (String) -> Unit
 ) {
     val columnWeight3 = .3f
     val columnWeight6 = .6f
     val columnWeight7 = .7f
     val columnWeight1 = .1f
+    val columnWeight4 = .4f
 
-    val totalValue = orders.sumOf { it.totalValue }
 
     LazyColumn(
         contentPadding = PaddingValues(16.dp),
@@ -257,51 +269,30 @@ fun OrderList(
                 )
             }
         }
-        items(items = orders, key = { it.id }) { currentOrder ->
+
+        items(
+            count = orders.itemCount,
+            key = orders.itemKey { order ->
+                order.id
+            }) { index ->
+            val currentOrder = orders[index]
             Row(
                 Modifier
                     .fillMaxWidth()
                     .border(1.dp, Blue80)
             ) {
-
-                TableCell(
-                    text = currentOrder.id,
-                    weight = columnWeight3,
-                    modifier = Modifier.clickable(onClick = { onOrderDetailClick(currentOrder.id) })
-                )
-                TableCell(text = currentOrder.customer, weight = columnWeight3)
-                TableCell(text = currentOrder.totalValue.asCurrency(), weight = columnWeight3)
-                DeleteRow(
-                    weight = columnWeight1,
-                    modifier = Modifier.clickable(onClick = { onDeleteOrderClick(currentOrder.id) })
-                )
-            }
-        }
-        item {
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .background(
-                        color = MaterialTheme.colorScheme.secondaryContainer,
-                        shape = RoundedCornerShape(bottomStart = 10.dp, bottomEnd = 10.dp)
+                if (currentOrder != null) {
+                    TableCell(
+                        text = currentOrder.id,
+                        weight = columnWeight3,
+                        modifier = Modifier.clickable(onClick = { onOrderDetailClick(currentOrder.id) })
                     )
-            ) {
-                TableCell(text = "Total", weight = columnWeight6)
-                TableCell(text = totalValue.asCurrency(), weight = columnWeight4)
-            }
-        }
-        item {
-            Row(
-                Modifier
-                    .fillMaxWidth()
-            ) {
-                TextButton(
-                    onClick = onLoadMoreClick,
-                    modifier = Modifier
-                        .padding(top = 5.dp, end = 10.dp),
-                    enabled = hasMore
-                ) {
-                    Text(text = "More ...")
+                    TableCell(text = currentOrder.customer, weight = columnWeight3)
+                    TableCell(text = currentOrder.totalValue.asCurrency(), weight = columnWeight3)
+                    DeleteRow(
+                        weight = columnWeight1,
+                        modifier = Modifier.clickable(onClick = { onDeleteOrderClick(currentOrder.id) })
+                    )
                 }
             }
         }
@@ -312,19 +303,18 @@ fun OrderList(
 @Preview(showBackground = true, apiLevel = 36)
 @Composable
 fun OrderSummaryPreview() {
+    val fakeOrders = listOf(
+        Order("1", "John Doe", OrderStatus.COMPLETED, 1, 100.0),
+        Order("2", "Jane Smith", OrderStatus.PENDING, 2, 250.5),
+        Order("3", "Ali", OrderStatus.IN_PROGRESS, 1, 500.0)
+    )
+    val pagingData = PagingData.from(fakeOrders)
+    val orders = flowOf(pagingData).collectAsLazyPagingItems()
+
     FirstComposeAppTheme {
         OrderSummaryContent(
-            uiState = OrderUiState(
-                orders = listOf(
-                    Order("1", "John Doe", OrderStatus.COMPLETED, 1, 100.0),
-                    Order("2", "Jane Smith", OrderStatus.PENDING, 2, 250.5),
-                    Order("3", "Ali", OrderStatus.IN_PROGRESS, 1, 500.0)
-                ),
-                isLoading = false,
-                error = null
-            ),
+            orders = orders,
             refresh = {},
-            loadMore = {},
             onOrderDetailClick = {},
             onDeleteOrderClick = {}
         )

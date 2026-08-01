@@ -1,5 +1,6 @@
 package com.ali.firstcomposeapp.data.local.dao
 
+import androidx.paging.PagingSource
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
@@ -17,17 +18,9 @@ interface OrderDao {
         SELECT *
         FROM orders
         ORDER BY id
-        LIMIT :limit
-        OFFSET :offset
         """
     )
-    fun getPage(
-        limit: Int,
-        offset: Int
-    ): Flow<List<OrderEntity>>
-
-    @Query("SELECT * FROM orders")
-    fun observeAll(): Flow<List<OrderEntity>>
+    fun pagingSource(): PagingSource<Int, OrderEntity>
 
     @Query("SELECT * FROM orders WHERE id = :id")
     suspend fun getById(id: String): OrderEntity?
