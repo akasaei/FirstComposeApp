@@ -64,6 +64,9 @@ fun OrderSummaryScreen(
         refresh = {
             viewModel.onEvent(OrderEvent.Refresh)
         },
+        loadMore = {
+            viewModel.onEvent(OrderEvent.NextPage)
+        },
         onOrderDetailClick = onOrderDetailClick,
         onDeleteOrderClick = onDeleteOrder
     )
@@ -73,6 +76,7 @@ fun OrderSummaryScreen(
 fun OrderSummaryContent(
     uiState: OrderUiState,
     refresh: () -> Unit,
+    loadMore: () -> Unit,
     modifier: Modifier = Modifier,
     onOrderDetailClick: (String) -> Unit,
     onDeleteOrderClick: (String) -> Unit
@@ -128,7 +132,9 @@ fun OrderSummaryContent(
         ) {
             if (uiState.isRefreshing) {
                 LinearProgressIndicator(
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 0.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 0.dp)
                 )
             }
             when {
@@ -146,7 +152,9 @@ fun OrderSummaryContent(
                     OrderList(
                         uiState.orders,
                         onOrderDetailClick = onOrderDetailClick,
-                        onDeleteOrderClick = onDeleteOrderClick
+                        onDeleteOrderClick = onDeleteOrderClick,
+                        onLoadMoreClick = loadMore,
+                        hasMore = uiState.hasMore
                     )
                 }
             }
@@ -206,7 +214,9 @@ fun ErrorScreen(
 fun OrderList(
     orders: List<Order>,
     onOrderDetailClick: (String) -> Unit,
-    onDeleteOrderClick: (String) -> Unit
+    onDeleteOrderClick: (String) -> Unit,
+    onLoadMoreClick: () -> Unit,
+    hasMore: Boolean
 ) {
     val columnWeight3 = .3f
     val columnWeight6 = .6f
@@ -280,6 +290,21 @@ fun OrderList(
                 TableCell(text = totalValue.asCurrency(), weight = columnWeight4)
             }
         }
+        item {
+            Row(
+                Modifier
+                    .fillMaxWidth()
+            ) {
+                TextButton(
+                    onClick = onLoadMoreClick,
+                    modifier = Modifier
+                        .padding(top = 5.dp, end = 10.dp),
+                    enabled = hasMore
+                ) {
+                    Text(text = "More ...")
+                }
+            }
+        }
     }
 }
 
@@ -299,6 +324,7 @@ fun OrderSummaryPreview() {
                 error = null
             ),
             refresh = {},
+            loadMore = {},
             onOrderDetailClick = {},
             onDeleteOrderClick = {}
         )

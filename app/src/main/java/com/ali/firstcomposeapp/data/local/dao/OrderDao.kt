@@ -12,8 +12,22 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface OrderDao {
 
-    @Query("SELECT * FROM orders LIMIT :limit OFFSET :offset")
-    fun observeAll(limit: Int = 10, offset: Int = 0): Flow<List<OrderEntity>>
+    @Query(
+        """
+        SELECT *
+        FROM orders
+        ORDER BY id
+        LIMIT :limit
+        OFFSET :offset
+        """
+    )
+    fun getPage(
+        limit: Int,
+        offset: Int
+    ): Flow<List<OrderEntity>>
+
+    @Query("SELECT * FROM orders")
+    fun observeAll(): Flow<List<OrderEntity>>
 
     @Query("SELECT * FROM orders WHERE id = :id")
     suspend fun getById(id: String): OrderEntity?

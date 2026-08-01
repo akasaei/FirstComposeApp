@@ -19,7 +19,6 @@ import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
 
-
 @Singleton
 class OrderRepository @Inject constructor(
     private val orderDao: OrderDao,
@@ -27,6 +26,33 @@ class OrderRepository @Inject constructor(
     private val orderApi: OrderApi,
     private val orderItemApi: OrderItemApi
 ) {
+
+    fun getOrdersPage(
+        page: Int,
+        pageSize: Int
+    ): Flow<List<Order>> =
+        flow {
+
+            val offset = page * pageSize
+            emitAll(
+                orderDao.getPage(
+                    limit = pageSize,
+                    offset = offset
+                )
+                    .map { entities ->
+                        entities.map(OrderEntity::toOrder)
+                    }
+            )
+        }
+
+
+    suspend fun hasMore(
+        page: Int,
+        pageSize: Int
+    ): Boolean {
+
+        return orderDao.count() > ((page + 1) * pageSize)
+    }
 
     suspend fun testRemoteOrders(): List<Order> {
         return orderApi.getOrders().map { order -> order.toOrder() }
@@ -43,16 +69,6 @@ class OrderRepository @Inject constructor(
         orderItemDao.insertAll(itemEntities)
     }
 
-
-    fun observeOrders(): Flow<List<Order>> =
-        flow {
-            emitAll(
-                orderDao.observeAll()
-                    .map { entities ->
-                        entities.map(OrderEntity::toOrder)
-                    }
-            )
-        }
 
     suspend fun getOrder(id: String): Order? {
 
