@@ -11,11 +11,20 @@ import javax.inject.Inject
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 @HiltViewModel
 class OrderViewModel @Inject constructor(
     private val repository: OrderRepository
 ) : ViewModel() {
+
+    private val _refreshError =
+        MutableStateFlow<String?>(null)
+
+    val refreshError: StateFlow<String?> =
+        _refreshError.asStateFlow()
 
     val orders: Flow<PagingData<Order>> =
         repository
@@ -30,6 +39,9 @@ class OrderViewModel @Inject constructor(
         viewModelScope.launch {
             runCatching {
                 repository.refreshOrders()
+            }.onFailure { exception ->
+                _refreshError.value =
+                    exception.message ?: "Unable to refresh orders"
             }
         }
     }

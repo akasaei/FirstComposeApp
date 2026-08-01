@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
@@ -25,15 +24,21 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.PagingData
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
@@ -58,12 +63,14 @@ fun OrderSummaryScreen(
     onOrderDetailClick: (String) -> Unit,
     onDeleteOrder: (String) -> Unit
 ) {
-    val orders =
-        viewModel.orders.collectAsLazyPagingItems()
+    val orders = viewModel.orders.collectAsLazyPagingItems()
+
+    val refreshError by viewModel.refreshError.collectAsStateWithLifecycle()
 
     OrderSummaryContent(
         orders = orders,
         modifier = modifier,
+        refreshError = refreshError,
         refresh = {
             viewModel.onEvent(OrderEvent.Refresh)
         },
@@ -75,13 +82,22 @@ fun OrderSummaryScreen(
 @Composable
 fun OrderSummaryContent(
     orders: LazyPagingItems<Order>,
+    refreshError: String?,
     refresh: () -> Unit,
     modifier: Modifier = Modifier,
     onOrderDetailClick: (String) -> Unit,
     onDeleteOrderClick: (String) -> Unit
 ) {
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(refreshError) {
+        refreshError?.let {
+            snackbarHostState.showSnackbar(message = it)
+        }
+    }
     Scaffold(
         modifier = modifier.fillMaxSize(),
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             Column {
                 Spacer(modifier = Modifier.height(48.dp))
@@ -125,30 +141,6 @@ fun OrderSummaryContent(
                 onDeleteOrderClick = onDeleteOrderClick
             )
             when (
-                val appendState =
-                    orders.loadState.append
-            ) {
-                is LoadState.Loading -> {
-                    LinearProgressIndicator(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 0.dp)
-                    )
-                }
-
-                is LoadState.Error -> {
-                    ErrorScreen(
-                        errorMessage = appendState
-                            .error
-                            .message
-                            ?: "Unable to load more orders"
-                    )
-                }
-
-                is LoadState.NotLoading -> Unit
-            }
-
-            when (
                 val refreshState =
                     orders.loadState.refresh
             ) {
@@ -164,7 +156,8 @@ fun OrderSummaryContent(
                             errorMessage = refreshState
                                 .error
                                 .message
-                                ?: "Unable to load more orders"
+                                ?: "Unable to load more orders",
+                            onRetry = orders::retry
                         )
                     }
                 }
@@ -176,18 +169,19 @@ fun OrderSummaryContent(
 }
 
 @Composable
-fun LoadingScreen() {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
+fun LoadingScreen(modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
             .padding(16.dp),
-        contentAlignment = Alignment.Center
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         CircularProgressIndicator(
-            modifier = Modifier.size(64.dp),
+            modifier = modifier.size(64.dp),
             color = MaterialTheme.colorScheme.primary
         )
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = modifier.height(16.dp))
         Text(
             text = "Fetching orders...",
             color = MaterialTheme.colorScheme.primary
@@ -197,7 +191,8 @@ fun LoadingScreen() {
 
 @Composable
 fun ErrorScreen(
-    errorMessage: String
+    errorMessage: String,
+    onRetry: () -> Unit,
 ) {
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -221,6 +216,11 @@ fun ErrorScreen(
             color = MaterialTheme.colorScheme.error,
             style = MaterialTheme.typography.bodySmall
         )
+        TextButton(
+            onClick = onRetry
+        ) {
+            Text("Retry")
+        }
     }
 }
 
@@ -296,11 +296,39 @@ fun OrderList(
                 }
             }
         }
+        when (
+            val appendState =
+                orders.loadState.append
+        ) {
+            is LoadState.Loading -> {
+                item {
+                    LinearProgressIndicator(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 0.dp)
+                    )
+                }
+            }
+
+            is LoadState.Error -> {
+                item {
+                    ErrorScreen(
+                        errorMessage = appendState
+                            .error
+                            .message
+                            ?: "Unable to load more orders",
+                        onRetry = orders::retry
+                    )
+                }
+            }
+
+            is LoadState.NotLoading -> Unit
+        }
     }
 }
 
 
-@Preview(showBackground = true, apiLevel = 36)
+@Preview(showBackground = true)
 @Composable
 fun OrderSummaryPreview() {
     val fakeOrders = listOf(
@@ -314,6 +342,7 @@ fun OrderSummaryPreview() {
     FirstComposeAppTheme {
         OrderSummaryContent(
             orders = orders,
+            refreshError = null,
             refresh = {},
             onOrderDetailClick = {},
             onDeleteOrderClick = {}

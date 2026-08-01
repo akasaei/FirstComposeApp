@@ -1,5 +1,3 @@
-@file:Suppress("unused")
-
 package com.ali.firstcomposeapp.data.repository
 
 import androidx.paging.Pager
@@ -17,8 +15,6 @@ import com.ali.firstcomposeapp.data.remote.api.OrderItemApi
 import com.ali.firstcomposeapp.model.Order
 import com.ali.firstcomposeapp.model.OrderDetail
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.emitAll
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -43,47 +39,18 @@ class OrderRepository @Inject constructor(
                 prefetchDistance = 3,
                 enablePlaceholders = false
             ),
-            pagingSourceFactory = {
-                orderDao.pagingSource()
-            }
+            pagingSourceFactory = orderDao::pagingSource
         ).flow.map { pagingData ->
             pagingData.map(OrderEntity::toOrder)
         }
 
 
-    suspend fun hasMore(
-        page: Int,
-        pageSize: Int
-    ): Boolean {
-
-        return orderDao.count() > ((page + 1) * pageSize)
-    }
-
-    suspend fun testRemoteOrders(): List<Order> {
-        return orderApi.getOrders().map { order -> order.toOrder() }
-    }
-
     suspend fun refreshOrders() {
         val remoteOrders = orderApi.getOrders()
         val remoteOrderItems = orderItemApi.getOrderItems()
 
-        val entities = remoteOrders.map { it.toEntity() }
-        val itemEntities = remoteOrderItems.map { it.toEntity() }
-
-        orderDao.insertAll(entities)
-        orderItemDao.insertAll(itemEntities)
-    }
-
-
-    suspend fun getOrder(id: String): Order? {
-
-        return orderDao
-            .getById(id)
-            ?.toOrder()
-    }
-
-    suspend fun addOrder(order: Order) {
-        orderDao.insert(order.toEntity())
+        orderDao.insertAll(remoteOrders.map { it.toEntity() })
+        orderItemDao.insertAll(remoteOrderItems.map { it.toEntity() })
     }
 
     suspend fun deleteOrder(id: String) {
@@ -93,16 +60,11 @@ class OrderRepository @Inject constructor(
     fun observeOrderDetail(
         id: String
     ): Flow<OrderDetail?> =
-        flow {
-
-            emitAll(
-                orderDao
-                    .observeOrderWithItems(id)
-                    .map { relation ->
-                        relation?.toOrderDetail()
-                    }
-            )
-        }
+        orderDao
+            .observeOrderWithItems(id)
+            .map { relation ->
+                relation?.toOrderDetail()
+            }
 }
 
 
