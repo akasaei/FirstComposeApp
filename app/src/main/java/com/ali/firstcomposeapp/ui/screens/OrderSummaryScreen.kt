@@ -54,6 +54,7 @@ import com.ali.firstcomposeapp.viewmodel.OrderViewModel
 import com.ali.firstcomposeapp.viewmodel.event.OrderEvent
 import androidx.paging.LoadState
 import androidx.paging.compose.itemKey
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flowOf
 
 @Composable
@@ -65,14 +66,14 @@ fun OrderSummaryScreen(
 ) {
     val orders = viewModel.orders.collectAsLazyPagingItems()
 
-    val refreshError by viewModel.refreshError.collectAsStateWithLifecycle()
+    val refreshError = null
 
     OrderSummaryContent(
         orders = orders,
         modifier = modifier,
         refreshError = refreshError,
         refresh = {
-            viewModel.onEvent(OrderEvent.Refresh)
+            orders.refresh()
         },
         onOrderDetailClick = onOrderDetailClick,
         onDeleteOrderClick = onDeleteOrder
@@ -140,20 +141,17 @@ fun OrderSummaryContent(
                 onOrderDetailClick = onOrderDetailClick,
                 onDeleteOrderClick = onDeleteOrderClick
             )
-            when (
-                val refreshState =
-                    orders.loadState.refresh
-            ) {
+            val mediatorRefresh =
+                orders.loadState.mediator?.refresh?: orders.loadState.refresh
+            when (mediatorRefresh) {
                 is LoadState.Loading -> {
-                    if (orders.itemCount == 0) {
                         LoadingScreen()
-                    }
                 }
 
                 is LoadState.Error -> {
                     if (orders.itemCount == 0) {
                         ErrorScreen(
-                            errorMessage = refreshState
+                            errorMessage = mediatorRefresh
                                 .error
                                 .message
                                 ?: "Unable to load more orders",
@@ -298,7 +296,7 @@ fun OrderList(
         }
         when (
             val appendState =
-                orders.loadState.append
+                orders.loadState.mediator?.append?: orders.loadState.refresh
         ) {
             is LoadState.Loading -> {
                 item {

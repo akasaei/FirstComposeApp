@@ -5,6 +5,7 @@ import androidx.room.Room
 import com.ali.firstcomposeapp.data.local.AppDatabase
 import com.ali.firstcomposeapp.data.local.dao.OrderDao
 import com.ali.firstcomposeapp.data.local.dao.OrderItemDao
+import com.ali.firstcomposeapp.data.local.dao.RemoteKeysDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -38,4 +39,10 @@ object DatabaseModule {
         database: AppDatabase
     ): OrderItemDao =
         database.orderItemDao()
+
+    @Provides
+    fun provideRemoteKeysDao(
+        database: AppDatabase
+    ): RemoteKeysDao =
+        database.remoteKeysDao()
 }

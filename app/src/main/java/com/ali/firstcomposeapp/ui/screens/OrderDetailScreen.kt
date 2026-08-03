@@ -118,13 +118,17 @@ fun OrderDetailContent(
         ) {
             when {
                 uiState.isLoading -> LoadingScreen()
+                uiState.selectedOrder != null -> {
+                    OrderDetails(
+                        selectedOrder = uiState.selectedOrder,
+                        errorMessage = uiState.error,
+                        modifier = modifier
+                    )
+                }
+
                 uiState.error != null -> ErrorItemScreen(
                     errorMessage = uiState.error
                 )
-
-                uiState.selectedOrder != null -> {
-                    OrderDetails(uiState.selectedOrder, modifier)
-                }
             }
         }
     }
@@ -133,10 +137,11 @@ fun OrderDetailContent(
 
 @Composable
 fun ErrorItemScreen(
-    errorMessage: String
+    errorMessage: String,
+    modifier: Modifier = Modifier.fillMaxSize()
 ) {
     Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier,
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -164,6 +169,7 @@ fun ErrorItemScreen(
 @Composable
 fun OrderDetails(
     selectedOrder: OrderDetail?,
+    errorMessage: String? = null,
     modifier: Modifier = Modifier
 ) {
     val order = selectedOrder?.order
@@ -209,7 +215,16 @@ fun OrderDetails(
         item {
             OrderItemCardHeader()
         }
-        if (!orderItems.isNullOrEmpty()) {
+        if (errorMessage != null) {
+            item {
+                ErrorItemScreen(
+                    errorMessage = errorMessage,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 32.dp)
+                )
+            }
+        } else if (!orderItems.isNullOrEmpty()) {
             items(
                 items = orderItems,
                 key = { it.id }) { currentOrderItem ->

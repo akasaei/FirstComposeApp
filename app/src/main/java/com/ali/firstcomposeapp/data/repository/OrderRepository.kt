@@ -1,15 +1,18 @@
 package com.ali.firstcomposeapp.data.repository
 
+import androidx.paging.ExperimentalPagingApi
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.map
+import com.ali.firstcomposeapp.data.local.AppDatabase
 import com.ali.firstcomposeapp.data.local.OrderEntity
 import com.ali.firstcomposeapp.data.local.dao.OrderDao
 import com.ali.firstcomposeapp.data.local.dao.OrderItemDao
 import com.ali.firstcomposeapp.data.mapper.toEntity
 import com.ali.firstcomposeapp.data.mapper.toOrder
 import com.ali.firstcomposeapp.data.mapper.toOrderDetail
+import com.ali.firstcomposeapp.data.mediator.OrderRemoteMediator
 import com.ali.firstcomposeapp.data.remote.api.OrderApi
 import com.ali.firstcomposeapp.data.remote.api.OrderItemApi
 import com.ali.firstcomposeapp.model.Order
@@ -21,6 +24,7 @@ import javax.inject.Singleton
 
 @Singleton
 class OrderRepository @Inject constructor(
+    private val database: AppDatabase,
     private val orderDao: OrderDao,
     private val orderItemDao: OrderItemDao,
     private val orderApi: OrderApi,
@@ -31,6 +35,7 @@ class OrderRepository @Inject constructor(
         private const val PAGE_SIZE = 10
     }
 
+    @OptIn(ExperimentalPagingApi::class)
     fun observePagedOrders(): Flow<PagingData<Order>> =
         Pager(
             config = PagingConfig(
@@ -39,19 +44,21 @@ class OrderRepository @Inject constructor(
                 prefetchDistance = 3,
                 enablePlaceholders = false
             ),
-            pagingSourceFactory = orderDao::pagingSource
-        ).flow.map { pagingData ->
-            pagingData.map(OrderEntity::toOrder)
-        }
 
+            remoteMediator = OrderRemoteMediator(
+                database = database,
+                orderApi = orderApi
+            ),
 
-    suspend fun refreshOrders() {
-        val remoteOrders = orderApi.getOrders()
-        val remoteOrderItems = orderItemApi.getOrderItems()
+            pagingSourceFactory = {
+                orderDao.pagingSource()
+            }
 
-        orderDao.insertAll(remoteOrders.map { it.toEntity() })
-        orderItemDao.insertAll(remoteOrderItems.map { it.toEntity() })
-    }
+        )
+            .flow
+            .map { pagingData ->
+                pagingData.map(OrderEntity::toOrder)
+            }
 
     suspend fun deleteOrder(id: String) {
         orderDao.deleteById(id = id)
@@ -65,6 +72,20 @@ class OrderRepository @Inject constructor(
             .map { relation ->
                 relation?.toOrderDetail()
             }
+
+    suspend fun refreshOrderItems(
+        orderId: String
+    ) {
+
+        val remoteItems = orderItemApi.getOrderItems(orderId)
+        if(remoteItems.isNotEmpty()) {
+            orderItemDao.insertAll(
+                remoteItems.mapNotNull {
+                    it?.toEntity()
+                }
+            )
+        }
+    }
 }
 
 

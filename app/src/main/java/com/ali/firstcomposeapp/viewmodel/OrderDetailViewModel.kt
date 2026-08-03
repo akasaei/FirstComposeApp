@@ -33,6 +33,23 @@ class OrderDetailViewModel @Inject constructor(
 
     init {
         observeOrderDetail()
+        refreshOrderDetail()
+
+    }
+
+    private fun refreshOrderDetail() {
+        viewModelScope.launch {
+            try {
+                repository.refreshOrderItems(orderId)
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(
+                        error = e.message
+                            ?: "Unable to load order"
+                    )
+                }
+            }
+        }
     }
 
     private fun observeOrderDetail() {
