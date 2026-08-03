@@ -5,6 +5,7 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.map
+import androidx.room.withTransaction
 import com.ali.firstcomposeapp.data.local.AppDatabase
 import com.ali.firstcomposeapp.data.local.OrderEntity
 import com.ali.firstcomposeapp.data.local.dao.OrderDao
@@ -73,17 +74,24 @@ class OrderRepository @Inject constructor(
                 relation?.toOrderDetail()
             }
 
-    suspend fun refreshOrderItems(
-        orderId: String
-    ) {
+    suspend fun syncOrderDetail(orderId: String) {
+        database.withTransaction {
+            val order =
+                orderApi.getOrder(orderId)
 
-        val remoteItems = orderItemApi.getOrderItems(orderId)
-        if(remoteItems.isNotEmpty()) {
+            if (order != null) {
+                orderDao.insert(order.toEntity())
+            }
+
+            val items =
+                orderItemApi.getOrderItems(orderId)
+
+            orderItemDao.deleteByOrderId(orderId)
+
             orderItemDao.insertAll(
-                remoteItems.mapNotNull {
-                    it?.toEntity()
-                }
+                items.mapNotNull { it?.toEntity() }
             )
+
         }
     }
 }

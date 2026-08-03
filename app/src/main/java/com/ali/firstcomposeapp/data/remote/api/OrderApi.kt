@@ -11,4 +11,9 @@ interface OrderApi {
         @Query("page") page: Int,
         @Query("limit") limit: Int
     ): List<OrderDto>
+
+    @GET("orders/{id}")
+    suspend fun getOrder(
+        @Path("id") id: String
+    ): OrderDto?
 }

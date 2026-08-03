@@ -20,6 +20,6 @@ interface OrderItemDao {
     suspend fun insertAll(items: List<OrderItemEntity>)
 
     @Query("DELETE FROM order_items WHERE orderId = :orderId")
-    fun deleteByOrderId(orderId: String)
+    suspend fun deleteByOrderId(orderId: String)
 
 }

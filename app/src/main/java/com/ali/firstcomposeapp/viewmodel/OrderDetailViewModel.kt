@@ -40,7 +40,7 @@ class OrderDetailViewModel @Inject constructor(
     private fun refreshOrderDetail() {
         viewModelScope.launch {
             try {
-                repository.refreshOrderItems(orderId)
+                repository.syncOrderDetail(orderId)
             } catch (e: Exception) {
                 _uiState.update {
                     it.copy(
