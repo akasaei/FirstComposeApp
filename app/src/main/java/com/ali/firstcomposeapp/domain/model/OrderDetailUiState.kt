@@ -6,6 +6,5 @@ data class OrderDetailUiState (
         val selectedOrder: OrderDetail? = null,
         val isLoading: Boolean = false,
         val syncStatus: SyncStatus =
-                SyncStatus.Idle,
-        val lastSync: Long? = null
+                SyncStatus.Idle
 )

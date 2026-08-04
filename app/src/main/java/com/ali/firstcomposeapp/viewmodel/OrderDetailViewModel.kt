@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.onStart
 import javax.inject.Inject
 
@@ -37,23 +38,11 @@ class OrderDetailViewModel @Inject constructor(
         _uiState.asStateFlow()
 
     init {
-        observeLastSync()
         observeOrderDetail()
         refresh()
 
     }
 
-    private fun observeLastSync() {
-        viewModelScope.launch {
-            preferencesRepository.lastSyncTime.collect { timestamp ->
-                _uiState.update {
-                    it.copy(
-                        lastSync = timestamp
-                    )
-                }
-            }
-        }
-    }
 
     private fun refresh() {
         viewModelScope.launch {
@@ -66,7 +55,7 @@ class OrderDetailViewModel @Inject constructor(
                 syncOrderDetail(orderId)
                 _uiState.update {
                     it.copy(
-                        syncStatus = SyncStatus.Success
+                        syncStatus = SyncStatus.Success(preferencesRepository.lastSyncTime.first()?: 0L)
                     )
                 }
             } catch (e: Exception) {

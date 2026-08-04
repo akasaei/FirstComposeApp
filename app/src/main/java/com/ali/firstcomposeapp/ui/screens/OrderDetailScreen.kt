@@ -119,15 +119,14 @@ fun OrderDetailContent(
                         LinearProgressIndicator()
                     }
 
-                    SyncStatus.Success -> {
-                        uiState.lastSync?.let { timestamp ->
-                            Text(
-                                text = "Last synchronized: ${
-                                    formatTimestamp(timestamp)
-                                }",
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                        }
+                    is SyncStatus.Success -> {
+                        Text(
+                            text = "Last synchronized: ${
+                                formatTimestamp((sync.syncedAt))
+                            }",
+                            style = MaterialTheme.typography.bodySmall
+                        )
+
                         Text(
                             "Up to date",
                             style = MaterialTheme.typography.bodySmall

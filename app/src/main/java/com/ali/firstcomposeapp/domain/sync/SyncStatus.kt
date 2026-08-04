@@ -4,7 +4,9 @@ sealed interface SyncStatus {
 
     data object Idle : SyncStatus
     data object Syncing : SyncStatus
-    data object Success : SyncStatus
+    data class Success(
+        val syncedAt: Long
+    ) : SyncStatus
 
     data class Failed(
         val message: String
