@@ -3,8 +3,10 @@ package com.ali.firstcomposeapp.viewmodel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ali.firstcomposeapp.model.OrderDetailUiState
+import com.ali.firstcomposeapp.domain.model.OrderDetailUiState
 import com.ali.firstcomposeapp.data.repository.OrderRepository
+import com.ali.firstcomposeapp.domain.sync.SyncOrderDetailUseCase
+import com.ali.firstcomposeapp.domain.sync.SyncStatus
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -14,10 +16,12 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.onStart
 import javax.inject.Inject
+import kotlin.time.Clock
 
 @HiltViewModel
 class OrderDetailViewModel @Inject constructor(
     private val repository: OrderRepository,
+    private val syncOrderDetail: SyncOrderDetailUseCase,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -33,19 +37,31 @@ class OrderDetailViewModel @Inject constructor(
 
     init {
         observeOrderDetail()
-        refreshOrderDetail()
+        refresh()
 
     }
 
-    private fun refreshOrderDetail() {
+    private fun refresh() {
         viewModelScope.launch {
+            _uiState.update {
+                it.copy(
+                    syncStatus = SyncStatus.Syncing
+                )
+            }
             try {
-                repository.syncOrderDetail(orderId)
+                syncOrderDetail(orderId)
+                _uiState.update {
+                    it.copy(
+                        syncStatus = SyncStatus.Success,
+                        lastSync = Clock.System.now()
+                    )
+                }
             } catch (e: Exception) {
                 _uiState.update {
                     it.copy(
-                        error = e.message
-                            ?: "Unable to load order"
+                        syncStatus = SyncStatus.Failed(
+                            e.message ?: "Unknown error"
+                        )
                     )
                 }
             }
@@ -59,8 +75,7 @@ class OrderDetailViewModel @Inject constructor(
                 .onStart {
                     _uiState.update {
                         it.copy(
-                            isLoading = true,
-                            error = null
+                            isLoading = true
                         )
                     }
                 }
@@ -68,8 +83,9 @@ class OrderDetailViewModel @Inject constructor(
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            error = exception.message
-                                ?: "Unable to load order"
+                            syncStatus = SyncStatus.Failed(
+                                exception.message ?: "Unknown error"
+                            )
                         )
                     }
                 }
@@ -77,16 +93,15 @@ class OrderDetailViewModel @Inject constructor(
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            selectedOrder = detail,
-                            error = if (detail == null) {
-                                "Order not found"
-                            } else {
-                                null
-                            }
+                            selectedOrder = detail
                         )
+                    }
+                    if (detail == null) {
+                        _uiState.update {
+                            it.copy(syncStatus = SyncStatus.Failed("Order not found"))
+                        }
                     }
                 }
         }
     }
-
 }

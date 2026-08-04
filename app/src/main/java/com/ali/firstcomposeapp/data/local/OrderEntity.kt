@@ -2,7 +2,7 @@ package com.ali.firstcomposeapp.data.local
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.ali.firstcomposeapp.model.OrderStatus
+import com.ali.firstcomposeapp.domain.model.OrderStatus
 
 @Entity(tableName = "orders")
 data class OrderEntity(

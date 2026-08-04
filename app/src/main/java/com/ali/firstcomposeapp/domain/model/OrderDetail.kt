@@ -1,4 +1,4 @@
-package com.ali.firstcomposeapp.model
+package com.ali.firstcomposeapp.domain.model
 
 data class OrderDetail(
     val order: Order,

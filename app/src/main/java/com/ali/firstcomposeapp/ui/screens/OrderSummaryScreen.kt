@@ -30,7 +30,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,12 +37,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.PagingData
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
-import com.ali.firstcomposeapp.model.Order
-import com.ali.firstcomposeapp.model.OrderStatus
+import com.ali.firstcomposeapp.domain.model.Order
+import com.ali.firstcomposeapp.domain.model.OrderStatus
 import com.ali.firstcomposeapp.ui.components.DeleteRow
 import com.ali.firstcomposeapp.ui.components.TableCell
 import com.ali.firstcomposeapp.ui.components.TableHeaderCell
@@ -51,10 +49,8 @@ import com.ali.firstcomposeapp.ui.theme.Blue80
 import com.ali.firstcomposeapp.ui.theme.FirstComposeAppTheme
 import com.ali.firstcomposeapp.util.asCurrency
 import com.ali.firstcomposeapp.viewmodel.OrderViewModel
-import com.ali.firstcomposeapp.viewmodel.event.OrderEvent
 import androidx.paging.LoadState
 import androidx.paging.compose.itemKey
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flowOf
 
 @Composable

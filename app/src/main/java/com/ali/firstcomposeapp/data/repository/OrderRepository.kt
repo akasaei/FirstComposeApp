@@ -16,8 +16,8 @@ import com.ali.firstcomposeapp.data.mapper.toOrderDetail
 import com.ali.firstcomposeapp.data.mediator.OrderRemoteMediator
 import com.ali.firstcomposeapp.data.remote.api.OrderApi
 import com.ali.firstcomposeapp.data.remote.api.OrderItemApi
-import com.ali.firstcomposeapp.model.Order
-import com.ali.firstcomposeapp.model.OrderDetail
+import com.ali.firstcomposeapp.domain.model.Order
+import com.ali.firstcomposeapp.domain.model.OrderDetail
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -75,21 +75,20 @@ class OrderRepository @Inject constructor(
             }
 
     suspend fun syncOrderDetail(orderId: String) {
+        val remoteOrder =
+            orderApi.getOrder(orderId)
+        val remoteItems =
+            orderItemApi.getOrderItems(orderId)
         database.withTransaction {
-            val order =
-                orderApi.getOrder(orderId)
 
-            if (order != null) {
-                orderDao.insert(order.toEntity())
+            if (remoteOrder != null) {
+                orderDao.insert(remoteOrder.toEntity())
             }
-
-            val items =
-                orderItemApi.getOrderItems(orderId)
 
             orderItemDao.deleteByOrderId(orderId)
 
             orderItemDao.insertAll(
-                items.mapNotNull { it?.toEntity() }
+                remoteItems.mapNotNull { it?.toEntity() }
             )
 
         }

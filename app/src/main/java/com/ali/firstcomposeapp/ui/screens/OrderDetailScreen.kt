@@ -22,6 +22,7 @@ import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Card
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -34,16 +35,18 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.ali.firstcomposeapp.model.Order
-import com.ali.firstcomposeapp.model.OrderDetail
-import com.ali.firstcomposeapp.model.OrderDetailUiState
-import com.ali.firstcomposeapp.model.OrderItem
-import com.ali.firstcomposeapp.model.OrderStatus
+import com.ali.firstcomposeapp.domain.model.Order
+import com.ali.firstcomposeapp.domain.model.OrderDetail
+import com.ali.firstcomposeapp.domain.model.OrderDetailUiState
+import com.ali.firstcomposeapp.domain.model.OrderItem
+import com.ali.firstcomposeapp.domain.model.OrderStatus
+import com.ali.firstcomposeapp.domain.sync.SyncStatus
 import com.ali.firstcomposeapp.ui.components.TableCell
 import com.ali.firstcomposeapp.ui.components.TableHeaderCell
 import com.ali.firstcomposeapp.ui.theme.FirstComposeAppTheme
 import com.ali.firstcomposeapp.util.asCurrency
 import com.ali.firstcomposeapp.util.displayName
+import com.ali.firstcomposeapp.util.formatTime
 import com.ali.firstcomposeapp.util.priorityName
 import com.ali.firstcomposeapp.viewmodel.OrderDetailViewModel
 
@@ -63,7 +66,7 @@ fun OrderDetailScreen(
 
     OrderDetailContent(
         uiState = uiState,
-        onOrderSummary = onBackClick
+        onOrderSummary = onBackClick,
     )
 
 }
@@ -108,6 +111,33 @@ fun OrderDetailContent(
                         )
                     }
                 }
+                uiState.lastSync?.let { instant ->
+                    Text(
+                        text = "Last synchronized: ${
+                            formatTime(instant)
+                        }"
+                    )
+
+                }
+                when (val sync = uiState.syncStatus) {
+                    SyncStatus.Idle -> {}
+
+                    SyncStatus.Syncing -> {
+                        LinearProgressIndicator()
+                    }
+
+                    SyncStatus.Success -> {
+                        Text("Up to date")
+                    }
+
+                    is SyncStatus.Failed -> {
+                        ErrorItemScreen(
+                            errorMessage = (
+                                    sync.message
+                                    )
+                        )
+                    }
+                }
             }
         }
     ) { paddingValues ->
@@ -121,14 +151,10 @@ fun OrderDetailContent(
                 uiState.selectedOrder != null -> {
                     OrderDetails(
                         selectedOrder = uiState.selectedOrder,
-                        errorMessage = uiState.error,
+                        errorMessage = null,
                         modifier = modifier
                     )
                 }
-
-                uiState.error != null -> ErrorItemScreen(
-                    errorMessage = uiState.error
-                )
             }
         }
     }
@@ -138,30 +164,32 @@ fun OrderDetailContent(
 @Composable
 fun ErrorItemScreen(
     errorMessage: String,
-    modifier: Modifier = Modifier.fillMaxSize()
+    modifier: Modifier = Modifier.fillMaxWidth()
 ) {
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Icon(
-            imageVector = Icons.Default.Warning,
-            contentDescription = "Error",
-            tint = MaterialTheme.colorScheme.error,
-            modifier = Modifier.size(64.dp)
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = "Something went wrong!",
-            color = MaterialTheme.colorScheme.error,
-            style = MaterialTheme.typography.bodyLarge
-        )
-        Text(
-            text = errorMessage,
-            color = MaterialTheme.colorScheme.error,
-            style = MaterialTheme.typography.bodySmall
-        )
+        Row {
+            Icon(
+                imageVector = Icons.Default.Warning,
+                contentDescription = "Error",
+                tint = MaterialTheme.colorScheme.error,
+                modifier = Modifier.size(20.dp)
+            )
+            Text(
+                text = "Something went wrong!",
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodyLarge
+            )
+        }
+            Text(
+                text = errorMessage,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall
+            )
+
     }
 }
 
@@ -330,10 +358,8 @@ fun OrderDetailPreview() {
                         )
                     )
                 ),
-                isLoading = false,
-                error = null
+                isLoading = false
             ),
-            onOrderSummary = {}
-        )
+        ) {}
     }
 }

@@ -1,6 +1,6 @@
 package com.ali.firstcomposeapp.util
 
-import com.ali.firstcomposeapp.model.OrderStatus
+import com.ali.firstcomposeapp.domain.model.OrderStatus
 import java.text.NumberFormat
 import java.util.Locale
 

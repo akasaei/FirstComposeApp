@@ -4,8 +4,8 @@ package com.ali.firstcomposeapp.data.mapper
 
 import com.ali.firstcomposeapp.data.local.OrderEntity
 import com.ali.firstcomposeapp.data.remote.dto.OrderDto
-import com.ali.firstcomposeapp.model.Order
-import com.ali.firstcomposeapp.model.OrderStatus
+import com.ali.firstcomposeapp.domain.model.Order
+import com.ali.firstcomposeapp.domain.model.OrderStatus
 
 
 fun OrderEntity.toOrder(): Order = Order(

@@ -1,7 +1,7 @@
 package com.ali.firstcomposeapp.data.local
 
 import androidx.room.TypeConverter
-import com.ali.firstcomposeapp.model.OrderStatus
+import com.ali.firstcomposeapp.domain.model.OrderStatus
 
 class Converters {
 
