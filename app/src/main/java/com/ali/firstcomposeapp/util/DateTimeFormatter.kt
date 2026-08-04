@@ -1,20 +1,19 @@
 package com.ali.firstcomposeapp.util
 
-import kotlin.time.Instant
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
-fun formatTime(
-    instant: Instant
+fun formatTimestamp(
+    timestamp: Long
 ): String {
 
-    val localDateTime =
-        instant.toLocalDateTime(
-            TimeZone.currentSystemDefault()
-        )
+    val formatter = SimpleDateFormat(
+        "HH:mm:ss",
+        Locale.getDefault()
+    )
 
-    return "%02d:%02d".format(
-        localDateTime.hour,
-        localDateTime.minute
+    return formatter.format(
+        Date(timestamp)
     )
 }

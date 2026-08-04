@@ -46,7 +46,7 @@ import com.ali.firstcomposeapp.ui.components.TableHeaderCell
 import com.ali.firstcomposeapp.ui.theme.FirstComposeAppTheme
 import com.ali.firstcomposeapp.util.asCurrency
 import com.ali.firstcomposeapp.util.displayName
-import com.ali.firstcomposeapp.util.formatTime
+import com.ali.firstcomposeapp.util.formatTimestamp
 import com.ali.firstcomposeapp.util.priorityName
 import com.ali.firstcomposeapp.viewmodel.OrderDetailViewModel
 
@@ -111,14 +111,7 @@ fun OrderDetailContent(
                         )
                     }
                 }
-                uiState.lastSync?.let { instant ->
-                    Text(
-                        text = "Last synchronized: ${
-                            formatTime(instant)
-                        }"
-                    )
 
-                }
                 when (val sync = uiState.syncStatus) {
                     SyncStatus.Idle -> {}
 
@@ -127,7 +120,18 @@ fun OrderDetailContent(
                     }
 
                     SyncStatus.Success -> {
-                        Text("Up to date")
+                        uiState.lastSync?.let { timestamp ->
+                            Text(
+                                text = "Last synchronized: ${
+                                    formatTimestamp(timestamp)
+                                }",
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+                        Text(
+                            "Up to date",
+                            style = MaterialTheme.typography.bodySmall
+                        )
                     }
 
                     is SyncStatus.Failed -> {
@@ -184,11 +188,11 @@ fun ErrorItemScreen(
                 style = MaterialTheme.typography.bodyLarge
             )
         }
-            Text(
-                text = errorMessage,
-                color = MaterialTheme.colorScheme.error,
-                style = MaterialTheme.typography.bodySmall
-            )
+        Text(
+            text = errorMessage,
+            color = MaterialTheme.colorScheme.error,
+            style = MaterialTheme.typography.bodySmall
+        )
 
     }
 }

@@ -3,6 +3,7 @@ package com.ali.firstcomposeapp.viewmodel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ali.firstcomposeapp.data.datastore.UserPreferencesRepository
 import com.ali.firstcomposeapp.domain.model.OrderDetailUiState
 import com.ali.firstcomposeapp.data.repository.OrderRepository
 import com.ali.firstcomposeapp.domain.sync.SyncOrderDetailUseCase
@@ -16,12 +17,12 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.onStart
 import javax.inject.Inject
-import kotlin.time.Clock
 
 @HiltViewModel
 class OrderDetailViewModel @Inject constructor(
     private val repository: OrderRepository,
     private val syncOrderDetail: SyncOrderDetailUseCase,
+    private val preferencesRepository: UserPreferencesRepository,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -36,9 +37,22 @@ class OrderDetailViewModel @Inject constructor(
         _uiState.asStateFlow()
 
     init {
+        observeLastSync()
         observeOrderDetail()
         refresh()
 
+    }
+
+    private fun observeLastSync() {
+        viewModelScope.launch {
+            preferencesRepository.lastSyncTime.collect { timestamp ->
+                _uiState.update {
+                    it.copy(
+                        lastSync = timestamp
+                    )
+                }
+            }
+        }
     }
 
     private fun refresh() {
@@ -52,8 +66,7 @@ class OrderDetailViewModel @Inject constructor(
                 syncOrderDetail(orderId)
                 _uiState.update {
                     it.copy(
-                        syncStatus = SyncStatus.Success,
-                        lastSync = Clock.System.now()
+                        syncStatus = SyncStatus.Success
                     )
                 }
             } catch (e: Exception) {
