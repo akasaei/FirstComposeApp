@@ -10,15 +10,18 @@ import com.ali.firstcomposeapp.data.local.OrderEntity
 import com.ali.firstcomposeapp.data.local.OrderWithItems
 import kotlinx.coroutines.flow.Flow
 
+/**
+ * Data Access Object (DAO) for managing [OrderEntity] records in the local Room database.
+ *
+ * This interface provides methods for performing CRUD operations on the "orders" table,
+ * supporting pagination, reactive updates via [Flow], and relational data retrieval
+ * through [OrderWithItems].
+ */
 @Dao
 interface OrderDao {
 
     @Query(
-        """
-        SELECT *
-        FROM orders
-        ORDER BY id
-        """
+        "SELECT * FROM orders ORDER BY id"
     )
     fun pagingSource(): PagingSource<Int, OrderEntity>
 

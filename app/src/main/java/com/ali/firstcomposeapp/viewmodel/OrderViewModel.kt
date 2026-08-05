@@ -9,6 +9,15 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 
+/**
+ * ViewModel responsible for managing order-related data and UI logic.
+ *
+ * This class provides a reactive stream of paged orders and functionality to
+ * perform operations such as deleting an order, interacting directly with
+ * the [OrderRepository].
+ *
+ * @param repository The repository used to handle data operations for orders.
+ */
 @HiltViewModel
 class OrderViewModel @Inject constructor(
     private val repository: OrderRepository

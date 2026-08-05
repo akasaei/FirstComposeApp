@@ -61,10 +61,6 @@ class OrderRepository @Inject constructor(
                 pagingData.map(OrderEntity::toOrder)
             }
 
-    suspend fun deleteOrder(id: String) {
-        orderDao.deleteById(id = id)
-    }
-
     fun observeOrderDetail(
         id: String
     ): Flow<OrderDetail?> =
@@ -73,6 +69,10 @@ class OrderRepository @Inject constructor(
             .map { relation ->
                 relation?.toOrderDetail()
             }
+
+    suspend fun deleteOrder(id: String) {
+        orderDao.deleteById(id = id)
+    }
 
     suspend fun syncOrderDetail(orderId: String) {
         val remoteOrder =

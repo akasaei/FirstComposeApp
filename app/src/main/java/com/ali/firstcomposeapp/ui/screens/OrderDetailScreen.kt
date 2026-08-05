@@ -122,7 +122,7 @@ fun OrderDetailContent(
                     is SyncStatus.Success -> {
                         Text(
                             text = "Last synchronized: ${
-                                formatTimestamp((sync.syncedAt))
+                                formatTimestamp((uiState.lastSync ?: 0L))
                             }",
                             style = MaterialTheme.typography.bodySmall
                         )
@@ -162,7 +162,6 @@ fun OrderDetailContent(
         }
     }
 }
-
 
 @Composable
 fun ErrorItemScreen(
@@ -361,7 +360,6 @@ fun OrderDetailPreview() {
                         )
                     )
                 ),
-                isLoading = false
             ),
         ) {}
     }

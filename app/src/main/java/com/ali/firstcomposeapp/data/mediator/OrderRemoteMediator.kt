@@ -14,6 +14,22 @@ import com.ali.firstcomposeapp.data.local.dao.RemoteKeysDao
 import com.ali.firstcomposeapp.data.mapper.toEntity
 import com.ali.firstcomposeapp.data.remote.api.OrderApi
 
+/**
+ * [OrderRemoteMediator] implements the Paging 3 [RemoteMediator] API to handle loading paginated
+ * order data from a remote network source ([OrderApi]) into a local database ([AppDatabase]).
+ *
+ * It manages the synchronization of data to ensure that the local cache remains a consistent
+ * representation of the remote data, facilitating seamless offline support and efficient
+ * list scrolling.
+ *
+ * @property database The local Room database instance used for transaction management and data access.
+ * @property orderApi The retrofit service interface for fetching order data from the remote server.
+ *
+ * Workflow:
+ * 1. **REFRESH**: Triggered on initial load or manual refresh. Clears local [OrderEntity] and
+ *    [RemoteKeysEntity] data, then fetches the first page.
+ * 2. **PREPEND**: Currently not supported; returns success with pagination end reached.
+ */
 @OptIn(ExperimentalPagingApi::class)
 class OrderRemoteMediator(
 

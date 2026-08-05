@@ -6,14 +6,16 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.ali.firstcomposeapp.data.local.OrderItemEntity
 
+/**
+ * Data Access Object (DAO) for managing [OrderItemEntity] operations in the local database.
+ *
+ * This interface provides methods for retrieving, inserting, and deleting items
+ * associated with specific orders, ensuring data persistence for order line items.
+ */
 @Dao
 interface OrderItemDao {
 
-    @Query("""
-        SELECT *
-        FROM order_items
-        WHERE orderId = :orderId
-    """)
+    @Query("SELECT * FROM order_items WHERE orderId = :orderId")
     suspend fun getItems(orderId: String): List<OrderItemEntity>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)

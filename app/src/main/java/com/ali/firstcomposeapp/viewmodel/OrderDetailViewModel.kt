@@ -4,26 +4,35 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ali.firstcomposeapp.data.datastore.UserPreferencesRepository
-import com.ali.firstcomposeapp.domain.model.OrderDetailUiState
 import com.ali.firstcomposeapp.data.repository.OrderRepository
+import com.ali.firstcomposeapp.domain.model.OrderDetailUiState
 import com.ali.firstcomposeapp.domain.sync.SyncOrderDetailUseCase
 import com.ali.firstcomposeapp.domain.sync.SyncStatus
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/**
+ * ViewModel responsible for managing and providing data for the Order Detail screen.
+ *
+ * This ViewModel handles:
+ * - Observing the specific order details from the [OrderRepository].
+ * - Managing the synchronization process via [SyncOrderDetailUseCase].
+ * - Combining data from multiple sources (repository, user preferences, and sync status) into a single [OrderDetailUiState].
+ * - Automatically refreshing data upon initialization.
+ *
+ * @property syncOrderDetail The use case used to trigger a network synchronization of order details.
+ */
 @HiltViewModel
 class OrderDetailViewModel @Inject constructor(
-    private val repository: OrderRepository,
+    repository: OrderRepository,
     private val syncOrderDetail: SyncOrderDetailUseCase,
-    private val preferencesRepository: UserPreferencesRepository,
+    preferencesRepository: UserPreferencesRepository,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -31,79 +40,51 @@ class OrderDetailViewModel @Inject constructor(
         checkNotNull(savedStateHandle["orderId"]) {
             "Navigation argument orderId is missing"
         }
-    private val _uiState =
-        MutableStateFlow(OrderDetailUiState())
+    private val _syncStatus =
+        MutableStateFlow<SyncStatus>(SyncStatus.Idle)
 
-    val uiState: StateFlow<OrderDetailUiState> =
-        _uiState.asStateFlow()
+    val uiState : StateFlow<OrderDetailUiState> =
+        combine(
+            repository.observeOrderDetail(orderId),
+            preferencesRepository.lastSyncTime,
+            _syncStatus
+        ) { detail, lastSync, syncStatus ->
+
+            OrderDetailUiState(
+                isLoading = false,
+                selectedOrder = detail,
+                lastSync = lastSync,
+                syncStatus = syncStatus
+            )
+        }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = OrderDetailUiState(isLoading = true)
+            )
 
     init {
-        observeOrderDetail()
         refresh()
 
     }
 
-
-    private fun refresh() {
+    fun refresh() {
         viewModelScope.launch {
-            _uiState.update {
-                it.copy(
-                    syncStatus = SyncStatus.Syncing
-                )
-            }
+            _syncStatus.value = SyncStatus.Syncing
+
             try {
                 syncOrderDetail(orderId)
-                _uiState.update {
-                    it.copy(
-                        syncStatus = SyncStatus.Success(preferencesRepository.lastSyncTime.first()?: 0L)
-                    )
-                }
-            } catch (e: Exception) {
-                _uiState.update {
-                    it.copy(
-                        syncStatus = SyncStatus.Failed(
-                            e.message ?: "Unknown error"
-                        )
-                    )
-                }
-            }
-        }
-    }
 
-    private fun observeOrderDetail() {
-        viewModelScope.launch {
-            repository
-                .observeOrderDetail(orderId)
-                .onStart {
-                    _uiState.update {
-                        it.copy(
-                            isLoading = true
-                        )
-                    }
-                }
-                .catch { exception ->
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            syncStatus = SyncStatus.Failed(
-                                exception.message ?: "Unknown error"
-                            )
-                        )
-                    }
-                }
-                .collect { detail ->
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            selectedOrder = detail
-                        )
-                    }
-                    if (detail == null) {
-                        _uiState.update {
-                            it.copy(syncStatus = SyncStatus.Failed("Order not found"))
-                        }
-                    }
-                }
+                _syncStatus.value =
+                    SyncStatus.Success
+
+            } catch (e: Exception) {
+
+                _syncStatus.value =
+                    SyncStatus.Failed(
+                        e.message ?: "Unknown error"
+                    )
+            }
         }
     }
 }

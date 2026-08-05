@@ -21,6 +21,12 @@ fun Int.priorityName(): String =
         else -> "Unknown"
     }
 
+/**
+ * Formats this [Double] value as a currency string using the German locale ([Locale.GERMANY]).
+ *
+ * @return A string representation of the value formatted with the Euro symbol and German
+ * formatting rules (e.g., 1.234,56 €).
+ */
 fun Double.asCurrency(): String =
     NumberFormat.getCurrencyInstance(Locale.GERMANY)
         .format(this)
