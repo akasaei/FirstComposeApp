@@ -37,7 +37,7 @@ class OrderRepository @Inject constructor(
     }
 
     @OptIn(ExperimentalPagingApi::class)
-    fun observePagedOrders(): Flow<PagingData<Order>> =
+    fun observePagedOrders(query : String): Flow<PagingData<Order>> =
         Pager(
             config = PagingConfig(
                 pageSize = PAGE_SIZE,
@@ -52,7 +52,7 @@ class OrderRepository @Inject constructor(
             ),
 
             pagingSourceFactory = {
-                orderDao.pagingSource()
+                orderDao.pagingSource(query)
             }
 
         )

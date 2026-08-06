@@ -17,12 +17,16 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -30,6 +34,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,6 +42,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.PagingData
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
@@ -53,6 +59,7 @@ import androidx.paging.LoadState
 import androidx.paging.compose.itemKey
 import kotlinx.coroutines.flow.flowOf
 
+
 @Composable
 fun OrderSummaryScreen(
     modifier: Modifier = Modifier,
@@ -61,11 +68,15 @@ fun OrderSummaryScreen(
     onDeleteOrder: (String) -> Unit
 ) {
     val orders = viewModel.orders.collectAsLazyPagingItems()
+    val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
 
     val refreshError = null
 
+
     OrderSummaryContent(
         orders = orders,
+        searchQuery = searchQuery,
+        onSearchQueryChanged = viewModel::onSearchQueryChanged,
         modifier = modifier,
         refreshError = refreshError,
         refresh = {
@@ -79,6 +90,8 @@ fun OrderSummaryScreen(
 @Composable
 fun OrderSummaryContent(
     orders: LazyPagingItems<Order>,
+    searchQuery: String,
+    onSearchQueryChanged: (String) -> Unit,
     refreshError: String?,
     refresh: () -> Unit,
     modifier: Modifier = Modifier,
@@ -124,6 +137,13 @@ fun OrderSummaryContent(
                         )
                     }
                 }
+                SearchBar(query = searchQuery, onQueryChange = onSearchQueryChanged)
+                if (
+                    orders.itemCount == 0 &&
+                    orders.loadState.refresh is LoadState.NotLoading
+                ) {
+                    EmptySearchResult()
+                }
             }
         }
     ) { paddingValues ->
@@ -132,16 +152,17 @@ fun OrderSummaryContent(
                 .padding(paddingValues)
                 .fillMaxSize()
         ) {
+
             OrderList(
                 orders,
                 onOrderDetailClick = onOrderDetailClick,
                 onDeleteOrderClick = onDeleteOrderClick
             )
             val mediatorRefresh =
-                orders.loadState.mediator?.refresh?: orders.loadState.refresh
+                orders.loadState.mediator?.refresh ?: orders.loadState.refresh
             when (mediatorRefresh) {
                 is LoadState.Loading -> {
-                        LoadingScreen()
+                    LoadingScreen()
                 }
 
                 is LoadState.Error -> {
@@ -163,6 +184,21 @@ fun OrderSummaryContent(
 }
 
 @Composable
+fun EmptySearchResult() {
+    Column(modifier = Modifier.padding(15.dp)) {
+        Icon(
+            imageVector = Icons.Default.Search,
+            contentDescription = "No order found",
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(20.dp)
+        )
+        Text("No orders found.")
+        Text("Try another search.")
+    }
+
+}
+
+@Composable
 fun LoadingScreen(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
@@ -181,6 +217,48 @@ fun LoadingScreen(modifier: Modifier = Modifier) {
             color = MaterialTheme.colorScheme.primary
         )
     }
+}
+
+
+
+@Composable
+fun SearchBar(
+    query: String,
+    onQueryChange: (String) -> Unit
+) {
+
+    OutlinedTextField(
+        value = query,
+        onValueChange = onQueryChange,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(5.dp),
+        placeholder = {
+            Text("Search by ID or customer")
+        },
+        leadingIcon = {
+            Icon(
+                imageVector = Icons.Default.Search,
+                contentDescription = null
+            )
+        },
+        singleLine = true,
+        trailingIcon = {
+            if (query.isNotEmpty()) {
+                IconButton(
+                    onClick = {
+                        onQueryChange("")
+                    }
+                ) {
+                    Icon(
+                        Icons.Default.Clear,
+                        contentDescription = "Clear search"
+                    )
+                }
+            }
+        }
+    )
+
 }
 
 @Composable
@@ -292,7 +370,7 @@ fun OrderList(
         }
         when (
             val appendState =
-                orders.loadState.mediator?.append?: orders.loadState.refresh
+                orders.loadState.mediator?.append ?: orders.loadState.refresh
         ) {
             is LoadState.Loading -> {
                 item {
@@ -336,6 +414,8 @@ fun OrderSummaryPreview() {
     FirstComposeAppTheme {
         OrderSummaryContent(
             orders = orders,
+            searchQuery = "",
+            onSearchQueryChanged = {},
             refreshError = null,
             refresh = {},
             onOrderDetailClick = {},

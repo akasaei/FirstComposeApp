@@ -21,7 +21,7 @@ import kotlinx.coroutines.flow.Flow
 interface OrderDao {
 
     @Query(
-        "SELECT * FROM orders ORDER BY id"
+        "SELECT * FROM orders order by id"
     )
     fun pagingSource(): PagingSource<Int, OrderEntity>
 
@@ -48,4 +48,17 @@ interface OrderDao {
 
     @Query("SELECT COUNT(*) FROM orders")
     suspend fun count(): Int
+
+    @Query("""
+    SELECT *
+    FROM orders
+    WHERE
+        (:query = '')
+        OR id LIKE '%' || :query || '%'
+        OR customer LIKE '%' || :query || '%'
+    ORDER BY id
+""")
+    fun pagingSource(
+        query: String
+    ): PagingSource<Int, OrderEntity>
 }
