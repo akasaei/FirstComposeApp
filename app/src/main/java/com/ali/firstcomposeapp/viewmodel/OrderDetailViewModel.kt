@@ -8,10 +8,12 @@ import com.ali.firstcomposeapp.data.repository.OrderRepository
 import com.ali.firstcomposeapp.domain.model.OrderDetailUiState
 import com.ali.firstcomposeapp.domain.sync.SyncOrderDetailUseCase
 import com.ali.firstcomposeapp.domain.sync.SyncStatus
+import com.ali.firstcomposeapp.navigation.ARG_ORDER_ID
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -37,21 +39,22 @@ class OrderDetailViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val orderId: String =
-        checkNotNull(savedStateHandle["orderId"]) {
+        checkNotNull(savedStateHandle[ARG_ORDER_ID]) {
             "Navigation argument orderId is missing"
         }
-    private val _syncStatus =
-        MutableStateFlow<SyncStatus>(SyncStatus.Idle)
+
+    private val _syncStatus = MutableStateFlow<SyncStatus>(SyncStatus.Idle)
+    val syncStatus = _syncStatus.asStateFlow()
 
     val uiState : StateFlow<OrderDetailUiState> =
         combine(
             repository.observeOrderDetail(orderId),
             preferencesRepository.lastSyncTime,
-            _syncStatus
+            syncStatus
         ) { detail, lastSync, syncStatus ->
 
             OrderDetailUiState(
-                isLoading = false,
+                isLoading = syncStatus is SyncStatus.Syncing,
                 selectedOrder = detail,
                 lastSync = lastSync,
                 syncStatus = syncStatus
@@ -65,7 +68,6 @@ class OrderDetailViewModel @Inject constructor(
 
     init {
         refresh()
-
     }
 
     fun refresh() {
@@ -78,7 +80,7 @@ class OrderDetailViewModel @Inject constructor(
                 _syncStatus.value =
                     SyncStatus.Success
 
-            } catch (e: Exception) {
+            } catch (e: Throwable) {
 
                 _syncStatus.value =
                     SyncStatus.Failed(

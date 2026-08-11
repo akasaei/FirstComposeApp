@@ -78,4 +78,9 @@ dependencies {
     implementation(libs.androidx.paging.compose)
     implementation(libs.kotlinx.datetime)
     implementation(libs.androidx.datastore.preferences)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.mockk)
+    testImplementation(libs.turbine)
+    testImplementation(libs.androidx.arch.core.testing)
+    testImplementation(kotlin("test"))
 }

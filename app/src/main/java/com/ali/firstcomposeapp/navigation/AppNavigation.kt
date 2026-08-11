@@ -15,6 +15,7 @@ import androidx.navigation.navArgument
 import com.ali.firstcomposeapp.viewmodel.OrderDetailViewModel
 import com.ali.firstcomposeapp.viewmodel.OrderViewModel
 
+const val ARG_ORDER_ID = "orderId"
 @Composable
 fun AppNavigation(
     navController: NavHostController,
@@ -54,7 +55,7 @@ fun AppNavigation(
         composable(
             route = AppDestination.OrderDetails.route,
             arguments = listOf(
-                navArgument("orderId") {
+                navArgument(ARG_ORDER_ID) {
                     type = NavType.StringType
                 }
             )

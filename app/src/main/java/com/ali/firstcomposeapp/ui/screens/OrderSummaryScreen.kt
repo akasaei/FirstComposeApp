@@ -303,10 +303,7 @@ fun OrderList(
     onDeleteOrderClick: (String) -> Unit
 ) {
     val columnWeight3 = .3f
-    val columnWeight6 = .6f
-    val columnWeight7 = .7f
     val columnWeight1 = .1f
-    val columnWeight4 = .4f
 
 
     LazyColumn(

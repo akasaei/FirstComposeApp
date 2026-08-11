@@ -2,11 +2,14 @@ package com.ali.firstcomposeapp.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.ali.firstcomposeapp.data.repository.OrderRepository
+import com.ali.firstcomposeapp.domain.model.Order
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
@@ -38,7 +41,7 @@ class OrderViewModel @Inject constructor(
 
     val searchQuery = _searchQuery.asStateFlow()
 
-    val orders =
+    val orders : Flow<PagingData<Order>> =
         searchQuery
             .debounce(300.milliseconds)
             .distinctUntilChanged()
