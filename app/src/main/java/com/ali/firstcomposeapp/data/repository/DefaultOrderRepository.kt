@@ -76,14 +76,13 @@ class DefaultOrderRepository @Inject constructor(
 
     override suspend fun syncOrderDetail(orderId: String) {
         val remoteOrder =
-            orderApi.getOrder(orderId)
+            orderApi.getOrder(orderId) ?: return
+
         val remoteItems =
             orderItemApi.getOrderItems(orderId)
-        database.withTransaction {
 
-            if (remoteOrder != null) {
-                orderDao.insert(remoteOrder.toEntity())
-            }
+        database.withTransaction {
+            orderDao.insert(remoteOrder.toEntity())
 
             orderItemDao.deleteByOrderId(orderId)
 
