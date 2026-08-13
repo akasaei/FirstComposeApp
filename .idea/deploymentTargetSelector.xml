@@ -18,15 +18,19 @@
         <option name="selectionMode" value="DROPDOWN" />
         <DialogSelection />
       </SelectionState>
-      <SelectionState runConfigName="syncOrderDetail_when_remote_data_is_valid_updates_local_database()">
+      <SelectionState runConfigName="syncOrderDetail_when_fetching_items_fails_keeps_existing_local_data()">
         <option name="selectionMode" value="DROPDOWN" />
         <DialogSelection />
       </SelectionState>
-      <SelectionState runConfigName="syncOrderDetail_replaces_existing_order_items()">
+      <SelectionState runConfigName="syncOrderDetail_when_remote_data_exists_replaces_existing_local_data()">
         <option name="selectionMode" value="DROPDOWN" />
         <DialogSelection />
       </SelectionState>
-      <SelectionState runConfigName="syncOrderDetail_when_remote_order_is_null_keeps_existing_local_data()">
+      <SelectionState runConfigName="observeOrderDetail_emits_mapped_order_detail()">
+        <option name="selectionMode" value="DROPDOWN" />
+        <DialogSelection />
+      </SelectionState>
+      <SelectionState runConfigName="observeOrderDetail_emits_order_with_items()">
         <option name="selectionMode" value="DROPDOWN" />
         <DialogSelection />
       </SelectionState>
